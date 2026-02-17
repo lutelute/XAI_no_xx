@@ -464,6 +464,7 @@ tr:hover { background: var(--bg-hover); }
       <button class="method-pill" onclick="selectHousingMethod('lime')">LIME</button>
       <button class="method-pill" onclick="selectHousingMethod('pi')">Permutation Importance</button>
       <button class="method-pill" onclick="selectHousingMethod('pdp')">PDP / ICE</button>
+      <button class="method-pill" onclick="selectHousingMethod('houses')">3軒比較</button>
       <button class="method-pill" onclick="selectHousingMethod('comparison')">手法比較</button>
     </div>
 
@@ -580,6 +581,21 @@ tr:hover { background: var(--bg-hover); }
       <h3>2D PDP (特徴量間の交互作用)</h3>
       <div class="img-container" onclick="openLightbox(this)">
         <img src="problem1_housing/results/pdp_2d_rf.png" alt="2D PDP" onerror="this.parentElement.innerHTML='<div class=img-placeholder>run_all.sh 実行後に表示されます</div>'">
+      </div>
+    </div>
+
+    <!-- 3軒比較 -->
+    <div class="housing-method-content" id="housing-houses" style="display:none;">
+      <h3>3軒の住宅 — 何が価格を上げたか?</h3>
+      <p style="color:var(--text-secondary);font-size:0.85rem;margin-bottom:1rem;">SHAP値で各住宅の価格決定要因を比較。赤=価格を上げる要因、青=価格を下げる要因。棒の横の数値はその住宅の特徴量値。</p>
+      <div class="img-container" onclick="openLightbox(this)">
+        <img src="problem1_housing/results/three_houses_table.png" alt="3 Houses Table" onerror="this.parentElement.innerHTML='<div class=img-placeholder>python 06_three_houses.py 実行後に表示されます</div>'">
+      </div>
+      <div class="img-container" onclick="openLightbox(this)" style="margin-top:1rem;">
+        <img src="problem1_housing/results/three_houses_shap.png" alt="3 Houses SHAP" onerror="this.parentElement.innerHTML='<div class=img-placeholder>python 06_three_houses.py 実行後に表示されます</div>'">
+      </div>
+      <div class="img-container" onclick="openLightbox(this)" style="margin-top:1rem;">
+        <img src="problem1_housing/results/three_houses_waterfall.png" alt="3 Houses Waterfall" onerror="this.parentElement.innerHTML='<div class=img-placeholder>python 06_three_houses.py 実行後に表示されます</div>'">
       </div>
     </div>
 
