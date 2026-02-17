@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+
+# Data (large files)
+problem2_animals/data/
+problem3_faces/data/
+
+# Results (regeneratable)
+*/results/*.pkl
+*/results/*.pth
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/

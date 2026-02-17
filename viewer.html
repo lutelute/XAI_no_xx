@@ -1,0 +1,1486 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>XAI 解析プラットフォーム — インタラクティブ講演ビューア</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<style>
+:root {
+  --bg-primary: #0d1117;
+  --bg-secondary: #161b22;
+  --bg-card: #1c2333;
+  --bg-hover: #252d3a;
+  --border: #30363d;
+  --text-primary: #e6edf3;
+  --text-secondary: #8b949e;
+  --accent: #58a6ff;
+  --accent2: #3fb950;
+  --accent3: #d2a8ff;
+  --accent4: #f0883e;
+  --accent5: #ff7b72;
+  --accent6: #79c0ff;
+  --shadow: 0 4px 24px rgba(0,0,0,0.4);
+  --radius: 10px;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans JP', sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  min-height: 100vh;
+  line-height: 1.6;
+}
+a { color: var(--accent); text-decoration: none; }
+
+/* Header */
+.header {
+  background: linear-gradient(135deg, #1a1e2e 0%, #0d1117 100%);
+  border-bottom: 1px solid var(--border);
+  padding: 1.5rem 2rem;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  backdrop-filter: blur(12px);
+}
+.header h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  background: linear-gradient(90deg, var(--accent), var(--accent3));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.header .subtitle {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
+
+/* Tab Navigation */
+.tab-nav {
+  display: flex;
+  gap: 0.25rem;
+  padding: 0.75rem 2rem;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border);
+  overflow-x: auto;
+  flex-wrap: nowrap;
+}
+.tab-btn {
+  padding: 0.6rem 1.2rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 0.9rem;
+  white-space: nowrap;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+.tab-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+.tab-btn.active {
+  background: var(--bg-card);
+  color: var(--accent);
+  border-color: var(--accent);
+  font-weight: 600;
+}
+.tab-btn .tab-icon { margin-right: 0.4rem; }
+
+/* Main content */
+.main { padding: 1.5rem 2rem; max-width: 1600px; margin: 0 auto; }
+.tab-content { display: none; animation: fadeIn 0.3s ease; }
+.tab-content.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+/* Section */
+.section {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: var(--shadow);
+}
+.section h2 {
+  font-size: 1.2rem;
+  margin-bottom: 1rem;
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.section h3 {
+  font-size: 1rem;
+  margin: 1rem 0 0.5rem;
+  color: var(--accent3);
+}
+
+/* Method selector pills */
+.method-selector {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+.method-pill {
+  padding: 0.4rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+.method-pill:hover { border-color: var(--accent); color: var(--text-primary); }
+.method-pill.active {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+/* Sample selector */
+.sample-selector {
+  display: flex;
+  gap: 0.4rem;
+  margin-bottom: 1rem;
+}
+.sample-btn {
+  width: 36px; height: 36px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+.sample-btn:hover { border-color: var(--accent3); color: var(--text-primary); }
+.sample-btn.active {
+  background: var(--accent3);
+  color: #fff;
+  border-color: var(--accent3);
+}
+
+/* Image display */
+.img-container {
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem;
+  text-align: center;
+  min-height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+.img-container img {
+  max-width: 100%;
+  max-height: 600px;
+  border-radius: 6px;
+  animation: imgFadeIn 0.5s ease;
+}
+@keyframes imgFadeIn { from { opacity: 0; transform: scale(0.97); } to { opacity: 1; transform: scale(1); } }
+.img-placeholder {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  padding: 3rem;
+}
+
+/* Grid layouts */
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+@media (max-width: 1000px) {
+  .grid-2, .grid-3 { grid-template-columns: 1fr; }
+}
+
+/* Info cards */
+.info-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem;
+}
+.info-card .label {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.3rem;
+}
+.info-card .value {
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+/* Math blocks */
+.math-block {
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem 1.5rem;
+  margin: 0.8rem 0;
+  overflow-x: auto;
+}
+
+/* Tables */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0;
+}
+th, td {
+  padding: 0.6rem 1rem;
+  border: 1px solid var(--border);
+  text-align: left;
+  font-size: 0.85rem;
+}
+th {
+  background: var(--bg-secondary);
+  color: var(--accent);
+  font-weight: 600;
+}
+tr:hover { background: var(--bg-hover); }
+
+/* Taxonomy tree */
+.taxonomy-tree {
+  padding: 1rem;
+}
+.taxonomy-tree .branch {
+  margin-left: 1.5rem;
+  border-left: 2px solid var(--border);
+  padding-left: 1rem;
+  margin-bottom: 0.5rem;
+}
+.taxonomy-tree .node {
+  padding: 0.4rem 0.8rem;
+  margin: 0.3rem 0;
+  border-radius: 6px;
+  cursor: default;
+  display: inline-block;
+}
+.node-l1 { background: rgba(88,166,255,0.15); color: var(--accent); font-weight: 600; font-size: 1rem; }
+.node-l2 { background: rgba(210,168,255,0.15); color: var(--accent3); font-weight: 500; }
+.node-l3 { background: rgba(63,185,80,0.15); color: var(--accent2); }
+.node-method { background: rgba(240,136,62,0.1); color: var(--accent4); font-size: 0.85rem; }
+
+/* Positioning map (SVG) */
+.positioning-map {
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem;
+  text-align: center;
+}
+
+/* Badge */
+.badge {
+  display: inline-block;
+  padding: 0.15rem 0.5rem;
+  border-radius: 10px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-left: 0.3rem;
+}
+.badge-global { background: rgba(88,166,255,0.2); color: var(--accent); }
+.badge-local { background: rgba(210,168,255,0.2); color: var(--accent3); }
+.badge-both { background: rgba(63,185,80,0.2); color: var(--accent2); }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: var(--bg-primary); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-secondary); }
+
+/* Lightbox */
+.lightbox {
+  display: none;
+  position: fixed;
+  top: 0; left: 0;
+  width: 100vw; height: 100vh;
+  background: rgba(0,0,0,0.9);
+  z-index: 1000;
+  cursor: zoom-out;
+  align-items: center;
+  justify-content: center;
+}
+.lightbox.active { display: flex; }
+.lightbox img {
+  max-width: 95vw;
+  max-height: 95vh;
+  border-radius: 8px;
+}
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  <div>
+    <h1>XAI 解析プラットフォーム</h1>
+    <div class="subtitle">インタラクティブ講演ビューア — 説明可能AI手法の比較解析</div>
+  </div>
+</div>
+
+<!-- Tab Navigation -->
+<div class="tab-nav">
+  <button class="tab-btn active" onclick="switchTab('overview')">
+    <span class="tab-icon">&#9776;</span>概要
+  </button>
+  <button class="tab-btn" onclick="switchTab('housing')">
+    <span class="tab-icon">&#127968;</span>Problem 1: 住宅価格
+  </button>
+  <button class="tab-btn" onclick="switchTab('animals')">
+    <span class="tab-icon">&#128049;</span>Problem 2: 動物分類
+  </button>
+  <button class="tab-btn" onclick="switchTab('faces')">
+    <span class="tab-icon">&#128100;</span>Problem 3: 顔識別
+  </button>
+  <button class="tab-btn" onclick="switchTab('power')">
+    <span class="tab-icon">&#9889;</span>Problem 4: 電力系統
+  </button>
+  <button class="tab-btn" onclick="switchTab('taxonomy')">
+    <span class="tab-icon">&#128218;</span>XAI体系分類
+  </button>
+  <button class="tab-btn" onclick="switchTab('comparison')">
+    <span class="tab-icon">&#128200;</span>手法比較表
+  </button>
+</div>
+
+<!-- Lightbox -->
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+  <img id="lightbox-img" src="" alt="">
+</div>
+
+<div class="main">
+
+<!-- ===================== OVERVIEW ===================== -->
+<div class="tab-content active" id="tab-overview">
+  <div class="section">
+    <h2>XAI (Explainable AI) 解析プラットフォーム</h2>
+    <p>本プラットフォームは、複数のドメイン・データ型にわたってXAI手法を網羅的に適用し、その結果をインタラクティブに比較・検討するための講演用ツールです。</p>
+    <div class="grid-2" style="margin-top:1rem;">
+      <div class="info-card">
+        <div class="label">対象問題</div>
+        <div class="value">4つのドメイン</div>
+        <p style="color:var(--text-secondary);font-size:0.85rem;margin-top:0.3rem;">
+          表形式回帰 / 画像分類(自然画像) / 画像分類(顔) / 電力系統
+        </p>
+      </div>
+      <div class="info-card">
+        <div class="label">適用XAI手法</div>
+        <div class="value">7+ 手法</div>
+        <p style="color:var(--text-secondary);font-size:0.85rem;margin-top:0.3rem;">
+          SHAP / LIME / PI / PDP・ICE / Grad-CAM / IG / Occlusion
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>問題一覧</h2>
+    <table>
+      <thead>
+        <tr><th>Problem</th><th>ドメイン</th><th>データ型</th><th>タスク</th><th>モデル</th><th>XAI手法</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td style="color:var(--accent)">1. 住宅価格予測</td>
+          <td>不動産</td>
+          <td>表形式</td>
+          <td>回帰</td>
+          <td>RF, GBT</td>
+          <td>SHAP, LIME, PI, PDP/ICE</td>
+        </tr>
+        <tr>
+          <td style="color:var(--accent)">2. 動物分類</td>
+          <td>画像認識</td>
+          <td>カラー画像 (32x32)</td>
+          <td>10クラス分類</td>
+          <td>ResNet18</td>
+          <td>Grad-CAM, IG, Occlusion</td>
+        </tr>
+        <tr>
+          <td style="color:var(--accent)">3. 顔識別</td>
+          <td>顔認識</td>
+          <td>グレー画像</td>
+          <td>人物分類</td>
+          <td>CNN</td>
+          <td>Grad-CAM, IG, Occlusion</td>
+        </tr>
+        <tr>
+          <td style="color:var(--accent)">4. 電力系統</td>
+          <td>エネルギー</td>
+          <td>表形式</td>
+          <td>異常検知 / 回帰</td>
+          <td>RF, GBT</td>
+          <td>SHAP, LIME, PI, PDP</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section">
+    <h2>使い方</h2>
+    <p>上部のタブで各Problemを切り替え、XAI手法セレクタやサンプル切替で結果を探索してください。画像はクリックで拡大表示できます。</p>
+  </div>
+</div>
+
+<!-- ===================== PROBLEM 1: HOUSING ===================== -->
+<div class="tab-content" id="tab-housing">
+  <div class="section">
+    <h2>Problem 1: California Housing — 住宅価格予測</h2>
+    <p>California Housing データセット（8特徴量）を用いた住宅価格の回帰予測。RandomForest と GradientBoosting を学習し、複数のXAI手法で特徴量の寄与を解析。</p>
+    <div class="grid-3" style="margin-top:1rem;">
+      <div class="info-card"><div class="label">データ</div><div class="value">California Housing</div><div style="color:var(--text-secondary);font-size:0.8rem">sklearn組込 / 20,640サンプル</div></div>
+      <div class="info-card"><div class="label">タスク</div><div class="value">回帰</div><div style="color:var(--text-secondary);font-size:0.8rem">中央住宅価格 (×$100K)</div></div>
+      <div class="info-card"><div class="label">モデル</div><div class="value">RF / GBT</div><div style="color:var(--text-secondary);font-size:0.8rem">アンサンブル木モデル</div></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>モデル性能</h2>
+    <div class="img-container" onclick="openLightbox(this)">
+      <img src="problem1_housing/results/actual_vs_predicted.png" alt="Actual vs Predicted" onerror="this.parentElement.innerHTML='<div class=img-placeholder>run_all.sh 実行後に表示されます</div>'">
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>XAI 解析結果</h2>
+    <div class="method-selector" id="housing-methods">
+      <button class="method-pill active" onclick="selectHousingMethod('shap')">SHAP</button>
+      <button class="method-pill" onclick="selectHousingMethod('lime')">LIME</button>
+      <button class="method-pill" onclick="selectHousingMethod('pi')">Permutation Importance</button>
+      <button class="method-pill" onclick="selectHousingMethod('pdp')">PDP / ICE</button>
+      <button class="method-pill" onclick="selectHousingMethod('comparison')">手法比較</button>
+    </div>
+
+    <!-- SHAP -->
+    <div class="housing-method-content" id="housing-shap">
+      <h3>SHAP (SHapley Additive exPlanations)</h3>
+      <div class="math-block">
+        <p>$$\phi_i = \sum_{S \subseteq N \setminus \{i\}} \frac{|S|!(|N|-|S|-1)!}{|N|!} \left[ f(S \cup \{i\}) - f(S) \right]$$</p>
+      </div>
+      <p style="color:var(--text-secondary);font-size:0.85rem;margin-bottom:1rem;">ゲーム理論に基づくShapley値を用いて、各特徴量の予測への貢献度を公平に算出。TreeExplainerにより高速計算。</p>
+
+      <div style="margin-bottom:0.5rem;color:var(--text-secondary);font-size:0.85rem;">モデル選択:</div>
+      <div class="method-selector" id="housing-shap-model">
+        <button class="method-pill active" onclick="selectHousingShapModel('rf')">RandomForest</button>
+        <button class="method-pill" onclick="selectHousingShapModel('gb')">GradientBoosting</button>
+      </div>
+
+      <h3>Global: Summary Plot (Beeswarm)</h3>
+      <div class="img-container" onclick="openLightbox(this)" id="housing-shap-summary">
+        <img src="problem1_housing/results/shap_summary_rf.png" alt="SHAP Summary" onerror="this.parentElement.innerHTML='<div class=img-placeholder>run_all.sh 実行後に表示されます</div>'">
+      </div>
+
+      <h3>Global: Feature Importance Bar</h3>
+      <div class="img-container" onclick="openLightbox(this)" id="housing-shap-bar">
+        <img src="problem1_housing/results/shap_bar_rf.png" alt="SHAP Bar" onerror="this.parentElement.innerHTML='<div class=img-placeholder>run_all.sh 実行後に表示されます</div>'">
+      </div>
+
+      <h3>Dependence Plot</h3>
+      <div class="img-container" onclick="openLightbox(this)" id="housing-shap-dep">
+        <img src="problem1_housing/results/shap_dependence_rf.png" alt="SHAP Dependence" onerror="this.parentElement.innerHTML='<div class=img-placeholder>run_all.sh 実行後に表示されます</div>'">
+      </div>
+
+      <h3>Local: Waterfall (個別サンプル)</h3>
+      <div class="sample-selector" id="housing-shap-samples">
+        <button class="sample-btn active" onclick="selectHousingSample(0)">0</button>
+        <button class="sample-btn" onclick="selectHousingSample(1)">1</button>
+        <button class="sample-btn" onclick="selectHousingSample(2)">2</button>
+      </div>
+      <div class="img-container" onclick="openLightbox(this)" id="housing-shap-waterfall">
+        <img src="problem1_housing/results/shap_waterfall_rf_sample0.png" alt="SHAP Waterfall" onerror="this.parentElement.innerHTML='<div class=img-placeholder>run_all.sh 実行後に表示されます</div>'">
+      </div>
+    </div>
+
+    <!-- LIME -->
+    <div class="housing-method-content" id="housing-lime" style="display:none;">
+      <h3>LIME (Local Interpretable Model-agnostic Explanations)</h3>
+      <div class="math-block">
+        <p>$$\xi(x) = \arg\min_{g \in G} \; \mathcal{L}(f, g, \pi_x) + \Omega(g)$$</p>
+      </div>
+      <p style="color:var(--text-secondary);font-size:0.85rem;margin-bottom:1rem;">入力近傍の摂動サンプルで局所的に線形モデルを近似し、各特徴量の寄与を推定。</p>
+
+      <div style="margin-bottom:0.5rem;color:var(--text-secondary);font-size:0.85rem;">モデル・サンプル選択:</div>
+      <div class="method-selector">
+        <button class="method-pill active" onclick="selectHousingLime('rf')">RandomForest</button>
+        <button class="method-pill" onclick="selectHousingLime('gb')">GradientBoosting</button>
+      </div>
+      <div class="sample-selector" id="housing-lime-samples">
+        <button class="sample-btn active" onclick="selectHousingLimeSample(0)">0</button>
+        <button class="sample-btn" onclick="selectHousingLimeSample(1)">1</button>
+        <button class="sample-btn" onclick="selectHousingLimeSample(2)">2</button>
+      </div>
+      <div class="img-container" onclick="openLightbox(this)" id="housing-lime-img">
+        <img src="problem1_housing/results/lime_rf_sample0.png" alt="LIME" onerror="this.parentElement.innerHTML='<div class=img-placeholder>run_all.sh 実行後に表示されます</div>'">
+      </div>
+    </div>
+
+    <!-- Permutation Importance -->
+    <div class="housing-method-content" id="housing-pi" style="display:none;">
+      <h3>Permutation Importance</h3>
+      <p style="color:var(--text-secondary);font-size:0.85rem;margin-bottom:1rem;">各特徴量をランダムにシャッフルした時のモデル性能低下量で重要度を測定。モデル非依存のグローバル手法。</p>
+      <div class="grid-2">
+        <div>
+          <h3>RandomForest</h3>
+          <div class="img-container" onclick="openLightbox(this)">
+            <img src="problem1_housing/results/pi_rf.png" alt="PI RF" onerror="this.parentElement.innerHTML='<div class=img-placeholder>run_all.sh 実行後に表示されます</div>'">
+          </div>
+        </div>
+        <div>
+          <h3>GradientBoosting</h3>
+          <div class="img-container" onclick="openLightbox(this)">
+            <img src="problem1_housing/results/pi_gb.png" alt="PI GB" onerror="this.parentElement.innerHTML='<div class=img-placeholder>run_all.sh 実行後に表示されます</div>'">
+          </div>
+        </div>
+      </div>
+      <h3>モデル間比較</h3>
+      <div class="img-container" onclick="openLightbox(this)">
+        <img src="problem1_housing/results/pi_comparison.png" alt="PI Comparison" onerror="this.parentElement.innerHTML='<div class=img-placeholder>run_all.sh 実行後に表示されます</div>'">
+      </div>
+    </div>
+
+    <!-- PDP/ICE -->
+    <div class="housing-method-content" id="housing-pdp" style="display:none;">
+      <h3>PDP (Partial Dependence Plot) / ICE (Individual Conditional Expectation)</h3>
+      <div class="math-block">
+        <p>$$\hat{f}_S(x_S) = \mathbb{E}_{X_C}\left[\hat{f}(x_S, X_C)\right] = \frac{1}{n}\sum_{i=1}^{n}\hat{f}(x_S, x_C^{(i)})$$</p>
+      </div>
+      <p style="color:var(--text-secondary);font-size:0.85rem;margin-bottom:1rem;">特徴量の値を変化させた時の予測値の変動を可視化。PDPは平均的効果、ICEは個別サンプルの効果。</p>
+
+      <div class="method-selector">
+        <button class="method-pill active" onclick="selectHousingPDP('rf')">RandomForest</button>
+        <button class="method-pill" onclick="selectHousingPDP('gb')">GradientBoosting</button>
+      </div>
+
+      <h3>PDP</h3>
+      <div class="img-container" onclick="openLightbox(this)" id="housing-pdp-img">
+        <img src="problem1_housing/results/pdp_rf.png" alt="PDP" onerror="this.parentElement.innerHTML='<div class=img-placeholder>run_all.sh 実行後に表示されます</div>'">
+      </div>
+
+      <h3>ICE</h3>
+      <div class="img-container" onclick="openLightbox(this)" id="housing-ice-img">
+        <img src="problem1_housing/results/ice_rf.png" alt="ICE" onerror="this.parentElement.innerHTML='<div class=img-placeholder>run_all.sh 実行後に表示されます</div>'">
+      </div>
+
+      <h3>2D PDP (特徴量間の交互作用)</h3>
+      <div class="img-container" onclick="openLightbox(this)">
+        <img src="problem1_housing/results/pdp_2d_rf.png" alt="2D PDP" onerror="this.parentElement.innerHTML='<div class=img-placeholder>run_all.sh 実行後に表示されます</div>'">
+      </div>
+    </div>
+
+    <!-- Comparison -->
+    <div class="housing-method-content" id="housing-comparison" style="display:none;">
+      <h3>手法間比較</h3>
+      <div class="img-container" onclick="openLightbox(this)">
+        <img src="problem1_housing/results/comparison_feature_ranking.png" alt="Comparison" onerror="this.parentElement.innerHTML='<div class=img-placeholder>run_all.sh 実行後に表示されます</div>'">
+      </div>
+      <div class="img-container" onclick="openLightbox(this)" style="margin-top:1rem;">
+        <img src="problem1_housing/results/comparison_table.png" alt="Comparison Table" onerror="this.parentElement.innerHTML='<div class=img-placeholder>run_all.sh 実行後に表示されます</div>'">
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== PROBLEM 2: ANIMALS ===================== -->
+<div class="tab-content" id="tab-animals">
+  <div class="section">
+    <h2>Problem 2: CIFAR-10 — 動物・乗物分類</h2>
+    <p>CIFAR-10データセット（32x32カラー画像、10クラス）をResNet18で分類し、畳み込みニューラルネットワークの判断根拠を可視化。</p>
+    <div class="grid-3" style="margin-top:1rem;">
+      <div class="info-card"><div class="label">データ</div><div class="value">CIFAR-10</div><div style="color:var(--text-secondary);font-size:0.8rem">32×32 カラー / 60,000枚</div></div>
+      <div class="info-card"><div class="label">タスク</div><div class="value">10クラス分類</div><div style="color:var(--text-secondary);font-size:0.8rem">airplane, cat, dog, etc.</div></div>
+      <div class="info-card"><div class="label">モデル</div><div class="value">ResNet18</div><div style="color:var(--text-secondary);font-size:0.8rem">ImageNet事前学習 → fine-tune</div></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>モデル性能</h2>
+    <div class="img-container" onclick="openLightbox(this)">
+      <img src="problem2_animals/results/confusion_matrix.png" alt="Confusion Matrix" onerror="this.parentElement.innerHTML='<div class=img-placeholder>run_all.sh 実行後に表示されます</div>'">
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>XAI 解析結果</h2>
+    <div class="method-selector" id="animals-methods">
+      <button class="method-pill" onclick="selectAnimalsMethod('gradcam')">Grad-CAM</button>
+      <button class="method-pill" onclick="selectAnimalsMethod('ig')">Integrated Gradients</button>
+      <button class="method-pill" onclick="selectAnimalsMethod('occlusion')">Occlusion Sensitivity</button>
+      <button class="method-pill active" onclick="selectAnimalsMethod('comparison')">手法比較</button>
+    </div>
+
+    <!-- Grad-CAM -->
+    <div class="animals-method-content" id="animals-gradcam" style="display:none;">
+      <h3>Grad-CAM (Gradient-weighted Class Activation Mapping)</h3>
+      <div class="math-block">
+        <p>$$\alpha_k^c = \frac{1}{Z}\sum_i \sum_j \frac{\partial y^c}{\partial A^k_{ij}}, \quad L^c_{\text{Grad-CAM}} = \text{ReLU}\left(\sum_k \alpha_k^c A^k\right)$$</p>
+      </div>
+      <p style="color:var(--text-secondary);font-size:0.85rem;margin-bottom:1rem;">最終畳込み層の勾配を重みとして特徴マップを加重平均し、モデルが注目する領域をヒートマップで可視化。</p>
+
+      <h3>全クラス一覧</h3>
+      <div class="img-container" onclick="openLightbox(this)">
+        <img src="problem2_animals/results/gradcam_grid.png" alt="Grad-CAM Grid" onerror="this.parentElement.innerHTML='<div class=img-placeholder>run_all.sh 実行後に表示されます</div>'">
+      </div>
+
+      <h3>個別サンプル詳細</h3>
+      <div class="sample-selector" id="animals-gradcam-samples">
+        <button class="sample-btn active" onclick="selectAnimalsSample('gradcam',0)">0</button>
+        <button class="sample-btn" onclick="selectAnimalsSample('gradcam',1)">1</button>
+        <button class="sample-btn" onclick="selectAnimalsSample('gradcam',2)">2</button>
+        <button class="sample-btn" onclick="selectAnimalsSample('gradcam',3)">3</button>
+        <button class="sample-btn" onclick="selectAnimalsSample('gradcam',4)">4</button>
+      </div>
+      <div class="img-container" onclick="openLightbox(this)" id="animals-gradcam-detail">
+        <img src="problem2_animals/results/gradcam_sample0.png" alt="Grad-CAM Detail" onerror="this.parentElement.innerHTML='<div class=img-placeholder>run_all.sh 実行後に表示されます</div>'">
+      </div>
+    </div>
+
+    <!-- Integrated Gradients -->
+    <div class="animals-method-content" id="animals-ig" style="display:none;">
+      <h3>Integrated Gradients</h3>
+      <div class="math-block">
+        <p>$$\text{IG}_i(x) = (x_i - x'_i) \times \int_{\alpha=0}^{1} \frac{\partial F(x' + \alpha(x - x'))}{\partial x_i} \, d\alpha$$</p>
+      </div>
+      <p style="color:var(--text-secondary);font-size:0.85rem;margin-bottom:1rem;">ベースライン（黒画像）から入力まで勾配を積分し、各ピクセルの貢献度を算出。公理的に正当化された帰属手法。</p>
+
+      <h3>全クラス一覧</h3>
+      <div class="img-container" onclick="openLightbox(this)">
+        <img src="problem2_animals/results/ig_grid.png" alt="IG Grid" onerror="this.parentElement.innerHTML='<div class=img-placeholder>run_all.sh 実行後に表示されます</div>'">
+      </div>
+
+      <h3>個別サンプル詳細</h3>
+      <div class="sample-selector">
+        <button class="sample-btn active" onclick="selectAnimalsSample('ig',0)">0</button>
+        <button class="sample-btn" onclick="selectAnimalsSample('ig',1)">1</button>
+        <button class="sample-btn" onclick="selectAnimalsSample('ig',2)">2</button>
+        <button class="sample-btn" onclick="selectAnimalsSample('ig',3)">3</button>
+        <button class="sample-btn" onclick="selectAnimalsSample('ig',4)">4</button>
+      </div>
+      <div class="img-container" onclick="openLightbox(this)" id="animals-ig-detail">
+        <img src="problem2_animals/results/ig_sample0.png" alt="IG Detail" onerror="this.parentElement.innerHTML='<div class=img-placeholder>run_all.sh 実行後に表示されます</div>'">
+      </div>
+    </div>
+
+    <!-- Occlusion -->
+    <div class="animals-method-content" id="animals-occlusion" style="display:none;">
+      <h3>Occlusion Sensitivity</h3>
+      <p style="color:var(--text-secondary);font-size:0.85rem;margin-bottom:1rem;">画像の一部をグレーパッチで遮蔽し、予測確率の変化を記録。予測に重要な領域ほど、遮蔽時の確率低下が大きい。</p>
+
+      <h3>全クラス一覧</h3>
+      <div class="img-container" onclick="openLightbox(this)">
+        <img src="problem2_animals/results/occlusion_grid.png" alt="Occlusion Grid" onerror="this.parentElement.innerHTML='<div class=img-placeholder>run_all.sh 実行後に表示されます</div>'">
+      </div>
+
+      <h3>個別サンプル詳細</h3>
+      <div class="sample-selector">
+        <button class="sample-btn active" onclick="selectAnimalsSample('occlusion',0)">0</button>
+        <button class="sample-btn" onclick="selectAnimalsSample('occlusion',1)">1</button>
+        <button class="sample-btn" onclick="selectAnimalsSample('occlusion',2)">2</button>
+        <button class="sample-btn" onclick="selectAnimalsSample('occlusion',3)">3</button>
+        <button class="sample-btn" onclick="selectAnimalsSample('occlusion',4)">4</button>
+      </div>
+      <div class="img-container" onclick="openLightbox(this)" id="animals-occlusion-detail">
+        <img src="problem2_animals/results/occlusion_sample0.png" alt="Occlusion Detail" onerror="this.parentElement.innerHTML='<div class=img-placeholder>run_all.sh 実行後に表示されます</div>'">
+      </div>
+    </div>
+
+    <!-- Comparison -->
+    <div class="animals-method-content" id="animals-comparison">
+      <h3>手法比較: Grad-CAM vs Integrated Gradients vs Occlusion</h3>
+      <div class="img-container" onclick="openLightbox(this)">
+        <img src="problem2_animals/results/comparison_methods.png" alt="Methods Comparison" onerror="this.parentElement.innerHTML='<div class=img-placeholder>run_all.sh 実行後に表示されます</div>'">
+      </div>
+      <div class="img-container" onclick="openLightbox(this)" style="margin-top:1rem;">
+        <img src="problem2_animals/results/comparison_summary.png" alt="Summary" onerror="this.parentElement.innerHTML='<div class=img-placeholder>run_all.sh 実行後に表示されます</div>'">
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== PROBLEM 3: FACES ===================== -->
+<div class="tab-content" id="tab-faces">
+  <div class="section">
+    <h2>Problem 3: LFW — 顔識別</h2>
+    <p>LFW (Labeled Faces in the Wild) データセットで人物を識別するCNNを学習し、「AIは顔のどこを見て人物を判別しているか」をXAIで解析。プライバシー・バイアスの議論につなげる。</p>
+    <div class="grid-3" style="margin-top:1rem;">
+      <div class="info-card"><div class="label">データ</div><div class="value">LFW</div><div style="color:var(--text-secondary);font-size:0.8rem">sklearn組込 / グレースケール</div></div>
+      <div class="info-card"><div class="label">タスク</div><div class="value">人物識別</div><div style="color:var(--text-secondary);font-size:0.8rem">出現頻度上位5-7人</div></div>
+      <div class="info-card"><div class="label">モデル</div><div class="value">CNN (PyTorch)</div><div style="color:var(--text-secondary);font-size:0.8rem">3層CNN + FC</div></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>サンプル顔画像</h2>
+    <div class="img-container" onclick="openLightbox(this)">
+      <img src="problem3_faces/results/sample_faces.png" alt="Sample Faces" onerror="this.parentElement.innerHTML='<div class=img-placeholder>run_all.sh 実行後に表示されます</div>'">
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>モデル性能</h2>
+    <div class="img-container" onclick="openLightbox(this)">
+      <img src="problem3_faces/results/confusion_matrix.png" alt="Confusion Matrix" onerror="this.parentElement.innerHTML='<div class=img-placeholder>run_all.sh 実行後に表示されます</div>'">
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>XAI 解析結果</h2>
+    <div class="method-selector" id="faces-methods">
+      <button class="method-pill" onclick="selectFacesMethod('gradcam')">Grad-CAM</button>
+      <button class="method-pill" onclick="selectFacesMethod('ig')">Integrated Gradients</button>
+      <button class="method-pill" onclick="selectFacesMethod('occlusion')">Occlusion Sensitivity</button>
+      <button class="method-pill active" onclick="selectFacesMethod('comparison')">手法比較</button>
+    </div>
+
+    <!-- Grad-CAM -->
+    <div class="faces-method-content" id="faces-gradcam" style="display:none;"
+      <h3>Grad-CAM — 顔のどこを見ているか</h3>
+      <p style="color:var(--text-secondary);font-size:0.85rem;margin-bottom:1rem;">顔認識AIが人物を識別する際に注目している顔領域（目、鼻、口、輪郭など）をヒートマップで可視化。</p>
+
+      <h3>全人物一覧</h3>
+      <div class="img-container" onclick="openLightbox(this)">
+        <img src="problem3_faces/results/gradcam_grid.png" alt="Grad-CAM Grid" onerror="this.parentElement.innerHTML='<div class=img-placeholder>run_all.sh 実行後に表示されます</div>'">
+      </div>
+
+      <h3>個別サンプル詳細</h3>
+      <div class="sample-selector">
+        <button class="sample-btn active" onclick="selectFacesSample('gradcam',0)">0</button>
+        <button class="sample-btn" onclick="selectFacesSample('gradcam',1)">1</button>
+        <button class="sample-btn" onclick="selectFacesSample('gradcam',2)">2</button>
+        <button class="sample-btn" onclick="selectFacesSample('gradcam',3)">3</button>
+        <button class="sample-btn" onclick="selectFacesSample('gradcam',4)">4</button>
+      </div>
+      <div class="img-container" onclick="openLightbox(this)" id="faces-gradcam-detail">
+        <img src="problem3_faces/results/gradcam_sample0.png" alt="Grad-CAM Detail" onerror="this.parentElement.innerHTML='<div class=img-placeholder>run_all.sh 実行後に表示されます</div>'">
+      </div>
+    </div>
+
+    <!-- Integrated Gradients -->
+    <div class="faces-method-content" id="faces-ig" style="display:none;">
+      <h3>Integrated Gradients — ピクセル単位の帰属</h3>
+      <p style="color:var(--text-secondary);font-size:0.85rem;margin-bottom:1rem;">各ピクセルが顔の識別にどの程度寄与しているかを勾配の積分で定量化。</p>
+
+      <h3>全人物一覧</h3>
+      <div class="img-container" onclick="openLightbox(this)">
+        <img src="problem3_faces/results/ig_grid.png" alt="IG Grid" onerror="this.parentElement.innerHTML='<div class=img-placeholder>run_all.sh 実行後に表示されます</div>'">
+      </div>
+
+      <h3>個別サンプル詳細</h3>
+      <div class="sample-selector">
+        <button class="sample-btn active" onclick="selectFacesSample('ig',0)">0</button>
+        <button class="sample-btn" onclick="selectFacesSample('ig',1)">1</button>
+        <button class="sample-btn" onclick="selectFacesSample('ig',2)">2</button>
+        <button class="sample-btn" onclick="selectFacesSample('ig',3)">3</button>
+        <button class="sample-btn" onclick="selectFacesSample('ig',4)">4</button>
+      </div>
+      <div class="img-container" onclick="openLightbox(this)" id="faces-ig-detail">
+        <img src="problem3_faces/results/ig_sample0.png" alt="IG Detail" onerror="this.parentElement.innerHTML='<div class=img-placeholder>run_all.sh 実行後に表示されます</div>'">
+      </div>
+    </div>
+
+    <!-- Occlusion -->
+    <div class="faces-method-content" id="faces-occlusion" style="display:none;">
+      <h3>Occlusion Sensitivity — 遮蔽感度分析</h3>
+      <p style="color:var(--text-secondary);font-size:0.85rem;margin-bottom:1rem;">顔の一部を遮蔽して予測変化を測定。目や口元が遮蔽されると精度が大幅に低下するか等を検証。</p>
+
+      <h3>全人物一覧</h3>
+      <div class="img-container" onclick="openLightbox(this)">
+        <img src="problem3_faces/results/occlusion_grid.png" alt="Occlusion Grid" onerror="this.parentElement.innerHTML='<div class=img-placeholder>run_all.sh 実行後に表示されます</div>'">
+      </div>
+
+      <h3>個別サンプル詳細</h3>
+      <div class="sample-selector">
+        <button class="sample-btn active" onclick="selectFacesSample('occlusion',0)">0</button>
+        <button class="sample-btn" onclick="selectFacesSample('occlusion',1)">1</button>
+        <button class="sample-btn" onclick="selectFacesSample('occlusion',2)">2</button>
+        <button class="sample-btn" onclick="selectFacesSample('occlusion',3)">3</button>
+        <button class="sample-btn" onclick="selectFacesSample('occlusion',4)">4</button>
+      </div>
+      <div class="img-container" onclick="openLightbox(this)" id="faces-occlusion-detail">
+        <img src="problem3_faces/results/occlusion_sample0.png" alt="Occlusion Detail" onerror="this.parentElement.innerHTML='<div class=img-placeholder>run_all.sh 実行後に表示されます</div>'">
+      </div>
+    </div>
+
+    <!-- Comparison -->
+    <div class="faces-method-content" id="faces-comparison">
+      <h3>手法比較: Grad-CAM vs Integrated Gradients vs Occlusion</h3>
+      <div class="img-container" onclick="openLightbox(this)">
+        <img src="problem3_faces/results/comparison_methods.png" alt="Methods Comparison" onerror="this.parentElement.innerHTML='<div class=img-placeholder>run_all.sh 実行後に表示されます</div>'">
+      </div>
+      <div class="img-container" onclick="openLightbox(this)" style="margin-top:1rem;">
+        <img src="problem3_faces/results/comparison_regions.png" alt="Regions Comparison" onerror="this.parentElement.innerHTML='<div class=img-placeholder>run_all.sh 実行後に表示されます</div>'">
+      </div>
+      <div class="img-container" onclick="openLightbox(this)" style="margin-top:1rem;">
+        <img src="problem3_faces/results/comparison_summary.png" alt="Summary" onerror="this.parentElement.innerHTML='<div class=img-placeholder>run_all.sh 実行後に表示されます</div>'">
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>講演での論点</h2>
+    <div class="info-card">
+      <p><strong style="color:var(--accent4);">AIは顔のどこを見ているか？</strong></p>
+      <ul style="color:var(--text-secondary);font-size:0.85rem;margin-top:0.5rem;padding-left:1.5rem;">
+        <li>目・鼻・口といった顔の主要パーツに注目しているか、背景や髪型に依存していないか</li>
+        <li>特定の人物に対するバイアス（肌色、性別、年齢）の可能性</li>
+        <li>プライバシーへの影響：どの程度の個人情報をモデルが「理解」しているか</li>
+        <li>XAIによるモデル監査の重要性</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== PROBLEM 4: POWER ===================== -->
+<div class="tab-content" id="tab-power">
+  <div class="section">
+    <h2>Problem 4: 電力系統 — 潮流異常検知 &amp; 電圧安定性</h2>
+    <p>電力系統のリアルタイム監視におけるML予測の解釈性を検証。2つのケーススタディ（潮流異常検知・電圧安定性限界予測）でXAI解析を実施。</p>
+  </div>
+
+  <div class="section">
+    <h2>系統モデル</h2>
+    <p style="color:var(--text-secondary);font-size:0.85rem;margin-bottom:1rem;">10母線の電力系統を模擬。母線1, 2は発電機（PV制御）、母線3-10は負荷（PQ負荷）。送電線10本で接続。</p>
+    <div class="img-container" onclick="openLightbox(this)">
+      <img src="problem4_power/results/system_topology.png" alt="System Topology" onerror="this.parentElement.innerHTML='<div class=img-placeholder>run_all.sh 実行後に表示されます</div>'">
+    </div>
+    <h3 style="margin-top:1.5rem;">正常運転 vs 異常パターン</h3>
+    <p style="color:var(--text-secondary);font-size:0.85rem;margin-bottom:1rem;">N-1想定事故: 線路開放、発電機脱落、電圧崩壊前兆の3パターン。色は母線電圧（緑=正常、黄=注意、赤=危険）を示す。</p>
+    <div class="img-container" onclick="openLightbox(this)">
+      <img src="problem4_power/results/system_normal_vs_anomaly.png" alt="Normal vs Anomaly" onerror="this.parentElement.innerHTML='<div class=img-placeholder>run_all.sh 実行後に表示されます</div>'">
+    </div>
+    <h3 style="margin-top:1.5rem;">電圧安定性の概念</h3>
+    <div class="img-container" onclick="openLightbox(this)">
+      <img src="problem4_power/results/voltage_stability_concept.png" alt="Voltage Stability Concept" onerror="this.parentElement.innerHTML='<div class=img-placeholder>run_all.sh 実行後に表示されます</div>'">
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>ケース選択</h2>
+    <div class="method-selector" id="power-cases">
+      <button class="method-pill active" onclick="selectPowerCase('case1')">Case 1: 潮流異常検知</button>
+      <button class="method-pill" onclick="selectPowerCase('case2')">Case 2: 電圧安定性</button>
+    </div>
+
+    <!-- Case 1 -->
+    <div class="power-case-content" id="power-case1">
+      <h3>Case 1: 潮流パターン異常検知</h3>
+      <p style="color:var(--text-secondary);font-size:0.85rem;margin-bottom:1rem;">N-1 contingency的な異常パターン（線路遮断→潮流再分配→過負荷）を検出するMLモデルの判断根拠をXAIで解析。</p>
+
+      <div class="grid-3" style="margin-top:1rem;margin-bottom:1rem;">
+        <div class="info-card"><div class="label">タスク</div><div class="value">異常検知 (分類)</div></div>
+        <div class="info-card"><div class="label">特徴量数</div><div class="value">~40</div><div style="color:var(--text-secondary);font-size:0.8rem">P, Q, V, 線路負荷率</div></div>
+        <div class="info-card"><div class="label">モデル</div><div class="value">RF / GBT</div></div>
+      </div>
+
+      <h3>モデル性能</h3>
+      <div class="img-container" onclick="openLightbox(this)">
+        <img src="problem4_power/results/case1_confusion_matrix.png" alt="Case1 CM" onerror="this.parentElement.innerHTML='<div class=img-placeholder>run_all.sh 実行後に表示されます</div>'">
+      </div>
+
+      <div class="method-selector" style="margin-top:1rem;">
+        <button class="method-pill active" onclick="selectPowerXAI('case1','shap')">SHAP</button>
+        <button class="method-pill" onclick="selectPowerXAI('case1','lime')">LIME</button>
+        <button class="method-pill" onclick="selectPowerXAI('case1','pi')">Permutation Importance</button>
+        <button class="method-pill" onclick="selectPowerXAI('case1','pdp')">PDP</button>
+      </div>
+
+      <div id="power-case1-xai">
+        <div class="power-xai-content" id="power-case1-shap">
+          <div class="grid-2">
+            <div>
+              <h3>SHAP Summary</h3>
+              <div class="img-container" onclick="openLightbox(this)">
+                <img src="problem4_power/results/case1_shap_summary.png" alt="SHAP Summary" onerror="this.parentElement.innerHTML='<div class=img-placeholder>run_all.sh 実行後に表示されます</div>'">
+              </div>
+            </div>
+            <div>
+              <h3>SHAP Feature Importance</h3>
+              <div class="img-container" onclick="openLightbox(this)">
+                <img src="problem4_power/results/case1_shap_bar.png" alt="SHAP Bar" onerror="this.parentElement.innerHTML='<div class=img-placeholder>run_all.sh 実行後に表示されます</div>'">
+              </div>
+            </div>
+          </div>
+          <h3>Waterfall (異常サンプル)</h3>
+          <div class="sample-selector">
+            <button class="sample-btn active" onclick="selectPowerSample('case1','shap_waterfall',0)">0</button>
+            <button class="sample-btn" onclick="selectPowerSample('case1','shap_waterfall',1)">1</button>
+            <button class="sample-btn" onclick="selectPowerSample('case1','shap_waterfall',2)">2</button>
+          </div>
+          <div class="img-container" onclick="openLightbox(this)" id="power-case1-shap-waterfall">
+            <img src="problem4_power/results/case1_shap_waterfall0.png" alt="Waterfall" onerror="this.parentElement.innerHTML='<div class=img-placeholder>run_all.sh 実行後に表示されます</div>'">
+          </div>
+        </div>
+        <div class="power-xai-content" id="power-case1-lime" style="display:none;">
+          <h3>LIME (異常サンプル)</h3>
+          <div class="sample-selector">
+            <button class="sample-btn active" onclick="selectPowerSample('case1','lime_sample',0)">0</button>
+            <button class="sample-btn" onclick="selectPowerSample('case1','lime_sample',1)">1</button>
+            <button class="sample-btn" onclick="selectPowerSample('case1','lime_sample',2)">2</button>
+          </div>
+          <div class="img-container" onclick="openLightbox(this)" id="power-case1-lime-img">
+            <img src="problem4_power/results/case1_lime_sample0.png" alt="LIME" onerror="this.parentElement.innerHTML='<div class=img-placeholder>run_all.sh 実行後に表示されます</div>'">
+          </div>
+        </div>
+        <div class="power-xai-content" id="power-case1-pi" style="display:none;">
+          <h3>Permutation Importance</h3>
+          <div class="img-container" onclick="openLightbox(this)">
+            <img src="problem4_power/results/case1_pi.png" alt="PI" onerror="this.parentElement.innerHTML='<div class=img-placeholder>run_all.sh 実行後に表示されます</div>'">
+          </div>
+        </div>
+        <div class="power-xai-content" id="power-case1-pdp" style="display:none;">
+          <h3>PDP (上位4特徴量)</h3>
+          <div class="img-container" onclick="openLightbox(this)">
+            <img src="problem4_power/results/case1_pdp.png" alt="PDP" onerror="this.parentElement.innerHTML='<div class=img-placeholder>run_all.sh 実行後に表示されます</div>'">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Case 2 -->
+    <div class="power-case-content" id="power-case2" style="display:none;">
+      <h3>Case 2: 電圧安定性限界予測</h3>
+      <p style="color:var(--text-secondary);font-size:0.85rem;margin-bottom:1rem;">無効電力・負荷率→電圧崩壊リスクの回帰予測。電圧崩壊の主要因をXAIで解明。</p>
+
+      <div class="grid-3" style="margin-top:1rem;margin-bottom:1rem;">
+        <div class="info-card"><div class="label">タスク</div><div class="value">回帰</div><div style="color:var(--text-secondary);font-size:0.8rem">電圧安定性マージン予測</div></div>
+        <div class="info-card"><div class="label">特徴量数</div><div class="value">10</div><div style="color:var(--text-secondary);font-size:0.8rem">負荷, 無効電力, etc.</div></div>
+        <div class="info-card"><div class="label">モデル</div><div class="value">RF / GBT</div></div>
+      </div>
+
+      <h3>モデル性能</h3>
+      <div class="img-container" onclick="openLightbox(this)">
+        <img src="problem4_power/results/case2_actual_vs_predicted.png" alt="Case2 Pred" onerror="this.parentElement.innerHTML='<div class=img-placeholder>run_all.sh 実行後に表示されます</div>'">
+      </div>
+
+      <div class="method-selector" style="margin-top:1rem;">
+        <button class="method-pill active" onclick="selectPowerXAI('case2','shap')">SHAP</button>
+        <button class="method-pill" onclick="selectPowerXAI('case2','lime')">LIME</button>
+        <button class="method-pill" onclick="selectPowerXAI('case2','pi')">Permutation Importance</button>
+        <button class="method-pill" onclick="selectPowerXAI('case2','pdp')">PDP</button>
+      </div>
+
+      <div id="power-case2-xai">
+        <div class="power-xai-content" id="power-case2-shap">
+          <div class="grid-2">
+            <div>
+              <h3>SHAP Summary</h3>
+              <div class="img-container" onclick="openLightbox(this)">
+                <img src="problem4_power/results/case2_shap_summary.png" alt="SHAP Summary" onerror="this.parentElement.innerHTML='<div class=img-placeholder>run_all.sh 実行後に表示されます</div>'">
+              </div>
+            </div>
+            <div>
+              <h3>SHAP Feature Importance</h3>
+              <div class="img-container" onclick="openLightbox(this)">
+                <img src="problem4_power/results/case2_shap_bar.png" alt="SHAP Bar" onerror="this.parentElement.innerHTML='<div class=img-placeholder>run_all.sh 実行後に表示されます</div>'">
+              </div>
+            </div>
+          </div>
+          <h3>Waterfall (個別サンプル)</h3>
+          <div class="sample-selector">
+            <button class="sample-btn active" onclick="selectPowerSample('case2','shap_waterfall',0)">0</button>
+            <button class="sample-btn" onclick="selectPowerSample('case2','shap_waterfall',1)">1</button>
+            <button class="sample-btn" onclick="selectPowerSample('case2','shap_waterfall',2)">2</button>
+          </div>
+          <div class="img-container" onclick="openLightbox(this)" id="power-case2-shap-waterfall">
+            <img src="problem4_power/results/case2_shap_waterfall0.png" alt="Waterfall" onerror="this.parentElement.innerHTML='<div class=img-placeholder>run_all.sh 実行後に表示されます</div>'">
+          </div>
+        </div>
+        <div class="power-xai-content" id="power-case2-lime" style="display:none;">
+          <h3>LIME (個別サンプル)</h3>
+          <div class="sample-selector">
+            <button class="sample-btn active" onclick="selectPowerSample('case2','lime_sample',0)">0</button>
+            <button class="sample-btn" onclick="selectPowerSample('case2','lime_sample',1)">1</button>
+            <button class="sample-btn" onclick="selectPowerSample('case2','lime_sample',2)">2</button>
+          </div>
+          <div class="img-container" onclick="openLightbox(this)" id="power-case2-lime-img">
+            <img src="problem4_power/results/case2_lime_sample0.png" alt="LIME" onerror="this.parentElement.innerHTML='<div class=img-placeholder>run_all.sh 実行後に表示されます</div>'">
+          </div>
+        </div>
+        <div class="power-xai-content" id="power-case2-pi" style="display:none;">
+          <h3>Permutation Importance</h3>
+          <div class="img-container" onclick="openLightbox(this)">
+            <img src="problem4_power/results/case2_pi.png" alt="PI" onerror="this.parentElement.innerHTML='<div class=img-placeholder>run_all.sh 実行後に表示されます</div>'">
+          </div>
+        </div>
+        <div class="power-xai-content" id="power-case2-pdp" style="display:none;">
+          <h3>PDP (上位4特徴量)</h3>
+          <div class="img-container" onclick="openLightbox(this)">
+            <img src="problem4_power/results/case2_pdp.png" alt="PDP" onerror="this.parentElement.innerHTML='<div class=img-placeholder>run_all.sh 実行後に表示されます</div>'">
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>ケース間比較</h2>
+    <div class="img-container" onclick="openLightbox(this)">
+      <img src="problem4_power/results/power_comparison.png" alt="Power Comparison" onerror="this.parentElement.innerHTML='<div class=img-placeholder>run_all.sh 実行後に表示されます</div>'">
+    </div>
+  </div>
+</div>
+
+<!-- ===================== TAXONOMY ===================== -->
+<div class="tab-content" id="tab-taxonomy">
+  <div class="section">
+    <h2>XAI手法の体系的分類 (Taxonomy)</h2>
+
+    <div class="taxonomy-tree">
+      <div class="node node-l1">XAI (Explainable AI)</div>
+      <div class="branch">
+        <div class="node node-l2">モデル固有 (Intrinsic)</div>
+        <div class="branch">
+          <div class="node node-l3">線形回帰 / ロジスティック回帰</div>
+          <div class="node node-l3">決定木</div>
+          <div class="node node-l3">ルールベースモデル</div>
+          <div class="node node-l3">GAM (一般化加法モデル)</div>
+          <div class="node node-l3">Attention機構</div>
+        </div>
+      </div>
+      <div class="branch">
+        <div class="node node-l2">事後的 (Post-hoc)</div>
+        <div class="branch">
+          <div class="node node-l3">グローバル説明</div>
+          <div class="branch">
+            <div class="node node-method">Permutation Importance <span class="badge badge-global">Global</span></div>
+            <div class="node node-method">PDP / ALE <span class="badge badge-global">Global</span></div>
+            <div class="node node-method">Global Surrogates <span class="badge badge-global">Global</span></div>
+            <div class="node node-method">SHAP (global summary) <span class="badge badge-both">Both</span></div>
+          </div>
+          <div class="node node-l3">ローカル説明</div>
+          <div class="branch">
+            <div class="node node-method">LIME <span class="badge badge-local">Local</span></div>
+            <div class="node node-method">SHAP (individual) <span class="badge badge-local">Local</span></div>
+            <div class="node node-method">ICE <span class="badge badge-local">Local</span></div>
+            <div class="node node-method">Counterfactual <span class="badge badge-local">Local</span></div>
+            <div class="node node-method">Anchors <span class="badge badge-local">Local</span></div>
+          </div>
+          <div class="node node-l3">勾配ベース (NN専用)</div>
+          <div class="branch">
+            <div class="node node-method">Grad-CAM <span class="badge badge-local">Local</span></div>
+            <div class="node node-method">Integrated Gradients <span class="badge badge-local">Local</span></div>
+            <div class="node node-method">SmoothGrad <span class="badge badge-local">Local</span></div>
+            <div class="node node-method">DeepLIFT <span class="badge badge-local">Local</span></div>
+            <div class="node node-method">Saliency Maps <span class="badge badge-local">Local</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>手法ポジショニングマップ</h2>
+    <div class="positioning-map">
+      <svg viewBox="0 0 600 400" width="100%" style="max-width:700px;">
+        <!-- Axes -->
+        <line x1="80" y1="350" x2="580" y2="350" stroke="#30363d" stroke-width="2"/>
+        <line x1="80" y1="50" x2="80" y2="350" stroke="#30363d" stroke-width="2"/>
+        <!-- Axis labels -->
+        <text x="330" y="390" fill="#8b949e" text-anchor="middle" font-size="13">ローカル ←――――――――→ グローバル</text>
+        <text x="30" y="200" fill="#8b949e" text-anchor="middle" font-size="13" transform="rotate(-90,30,200)">モデル固有 ←――→ モデル非依存</text>
+        <!-- Arrows -->
+        <polygon points="580,345 580,355 590,350" fill="#30363d"/>
+        <polygon points="75,50 85,50 80,40" fill="#30363d"/>
+        <!-- Methods -->
+        <circle cx="150" cy="120" r="22" fill="rgba(88,166,255,0.3)" stroke="#58a6ff" stroke-width="2"/>
+        <text x="150" y="125" fill="#58a6ff" text-anchor="middle" font-size="10" font-weight="bold">SHAP</text>
+        <circle cx="130" cy="200" r="20" fill="rgba(210,168,255,0.3)" stroke="#d2a8ff" stroke-width="2"/>
+        <text x="130" y="205" fill="#d2a8ff" text-anchor="middle" font-size="10" font-weight="bold">LIME</text>
+        <circle cx="430" cy="140" r="18" fill="rgba(63,185,80,0.3)" stroke="#3fb950" stroke-width="2"/>
+        <text x="430" y="145" fill="#3fb950" text-anchor="middle" font-size="9" font-weight="bold">PI</text>
+        <circle cx="470" cy="180" r="18" fill="rgba(240,136,62,0.3)" stroke="#f0883e" stroke-width="2"/>
+        <text x="470" y="185" fill="#f0883e" text-anchor="middle" font-size="9" font-weight="bold">PDP</text>
+        <circle cx="160" cy="290" r="20" fill="rgba(255,123,114,0.3)" stroke="#ff7b72" stroke-width="2"/>
+        <text x="160" y="283" fill="#ff7b72" text-anchor="middle" font-size="8" font-weight="bold">Grad-</text>
+        <text x="160" y="298" fill="#ff7b72" text-anchor="middle" font-size="8" font-weight="bold">CAM</text>
+        <circle cx="200" cy="260" r="18" fill="rgba(121,192,255,0.3)" stroke="#79c0ff" stroke-width="2"/>
+        <text x="200" y="265" fill="#79c0ff" text-anchor="middle" font-size="8" font-weight="bold">IG</text>
+        <circle cx="240" cy="230" r="16" fill="rgba(240,136,62,0.2)" stroke="#f0883e" stroke-width="2"/>
+        <text x="240" y="225" fill="#f0883e" text-anchor="middle" font-size="7" font-weight="bold">Occlu-</text>
+        <text x="240" y="238" fill="#f0883e" text-anchor="middle" font-size="7" font-weight="bold">sion</text>
+        <circle cx="500" cy="120" r="16" fill="rgba(63,185,80,0.2)" stroke="#3fb950" stroke-width="2"/>
+        <text x="500" y="113" fill="#3fb950" text-anchor="middle" font-size="7" font-weight="bold">ICE</text>
+        <text x="500" y="128" fill="#3fb950" text-anchor="middle" font-size="7" font-weight="bold">/ALE</text>
+        <circle cx="350" cy="300" r="18" fill="rgba(210,168,255,0.2)" stroke="#d2a8ff" stroke-width="2"/>
+        <text x="350" y="293" fill="#d2a8ff" text-anchor="middle" font-size="8" font-weight="bold">決定木</text>
+        <text x="350" y="308" fill="#d2a8ff" text-anchor="middle" font-size="7">(Intrinsic)</text>
+        <circle cx="450" cy="310" r="16" fill="rgba(121,192,255,0.2)" stroke="#79c0ff" stroke-width="2"/>
+        <text x="450" y="305" fill="#79c0ff" text-anchor="middle" font-size="7" font-weight="bold">線形</text>
+        <text x="450" y="318" fill="#79c0ff" text-anchor="middle" font-size="7">回帰</text>
+        <!-- Region labels -->
+        <rect x="100" y="60" width="120" height="25" rx="5" fill="rgba(88,166,255,0.1)" stroke="rgba(88,166,255,0.3)"/>
+        <text x="160" y="78" fill="#58a6ff" text-anchor="middle" font-size="10">ゲーム理論系</text>
+        <rect x="120" y="310" width="100" height="25" rx="5" fill="rgba(255,123,114,0.1)" stroke="rgba(255,123,114,0.3)"/>
+        <text x="170" y="328" fill="#ff7b72" text-anchor="middle" font-size="10">勾配系 (NN)</text>
+      </svg>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>手法選択フローチャート</h2>
+    <table>
+      <thead>
+        <tr><th>条件</th><th>推奨手法</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>表形式 + ツリー系モデル</td><td>SHAP (TreeSHAP) + PI + PDP/ICE</td></tr>
+        <tr><td>表形式 + 任意モデル</td><td>LIME + SHAP (KernelSHAP) + PI</td></tr>
+        <tr><td>画像 + CNN</td><td>Grad-CAM + Integrated Gradients + Occlusion</td></tr>
+        <tr><td>画像 + 任意モデル</td><td>LIME (superpixel) + Occlusion</td></tr>
+        <tr><td>テキスト + Transformer</td><td>Attention可視化 + IG + SHAP</td></tr>
+        <tr><td>グローバル概要が必要</td><td>PI + PDP + SHAP summary</td></tr>
+        <tr><td>個別予測の説明</td><td>SHAP waterfall + LIME + ICE</td></tr>
+        <tr><td>規制対応が必要</td><td>SHAP (Shapley値の公理的保証) + Counterfactual</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section">
+    <h2>本プロジェクトで使用した手法の数学的定義</h2>
+
+    <h3>SHAP (SHapley Additive exPlanations)</h3>
+    <div class="math-block">
+      <p>$$\phi_i(f, x) = \sum_{S \subseteq N \setminus \{i\}} \frac{|S|!(|N|-|S|-1)!}{|N|!} \left[ f_{S \cup \{i\}}(x_{S \cup \{i\}}) - f_S(x_S) \right]$$</p>
+    </div>
+    <p style="color:var(--text-secondary);font-size:0.85rem;">Shapley値に基づく統一的な特徴量帰属。加法性・対称性・ダミー公理を満たす唯一の帰属法。</p>
+
+    <h3>LIME</h3>
+    <div class="math-block">
+      <p>$$\xi(x) = \underset{g \in G}{\arg\min} \; \mathcal{L}(f, g, \pi_x) + \Omega(g)$$</p>
+      <p style="font-size:0.85rem;color:var(--text-secondary);margin-top:0.5rem;">ここで $\pi_x$ は $x$ 近傍のカーネル重み、$\Omega(g)$ は説明モデル $g$ の複雑度ペナルティ</p>
+    </div>
+
+    <h3>Grad-CAM</h3>
+    <div class="math-block">
+      <p>$$\alpha_k^c = \frac{1}{Z}\sum_i \sum_j \frac{\partial y^c}{\partial A^k_{ij}}, \quad L^c_{\text{Grad-CAM}} = \text{ReLU}\left(\sum_k \alpha_k^c A^k\right)$$</p>
+    </div>
+
+    <h3>Integrated Gradients</h3>
+    <div class="math-block">
+      <p>$$\text{IG}_i(x) = (x_i - x'_i) \times \int_{\alpha=0}^{1} \frac{\partial F(x' + \alpha \cdot (x - x'))}{\partial x_i} \, d\alpha$$</p>
+    </div>
+
+    <h3>Permutation Importance</h3>
+    <div class="math-block">
+      <p>$$\text{PI}_j = s - \frac{1}{K}\sum_{k=1}^{K} s_{j,\pi_k}$$</p>
+      <p style="font-size:0.85rem;color:var(--text-secondary);margin-top:0.5rem;">$s$ はオリジナルスコア、$s_{j,\pi_k}$ は第 $j$ 特徴量をシャッフルした時のスコア</p>
+    </div>
+
+    <h3>PDP (Partial Dependence)</h3>
+    <div class="math-block">
+      <p>$$\hat{f}_S(x_S) = \frac{1}{n}\sum_{i=1}^{n}\hat{f}(x_S, x_C^{(i)})$$</p>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== COMPARISON TABLE ===================== -->
+<div class="tab-content" id="tab-comparison">
+  <div class="section">
+    <h2>XAI手法 総合比較表</h2>
+    <div style="overflow-x:auto;">
+      <table>
+        <thead>
+          <tr>
+            <th>手法</th>
+            <th>カテゴリ</th>
+            <th>スコープ</th>
+            <th>モデル依存性</th>
+            <th>データ型</th>
+            <th>計算量</th>
+            <th>本プロジェクトでの使用</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="color:var(--accent);font-weight:600">SHAP</td>
+            <td>ゲーム理論</td>
+            <td><span class="badge badge-both">Both</span></td>
+            <td>モデル非依存 (TreeSHAP: 木専用)</td>
+            <td>表形式</td>
+            <td>O(TL2^M) / O(TLD)</td>
+            <td>P1, P4</td>
+          </tr>
+          <tr>
+            <td style="color:var(--accent);font-weight:600">LIME</td>
+            <td>近似モデル</td>
+            <td><span class="badge badge-local">Local</span></td>
+            <td>モデル非依存</td>
+            <td>全般</td>
+            <td>O(N × 推論)</td>
+            <td>P1, P4</td>
+          </tr>
+          <tr>
+            <td style="color:var(--accent);font-weight:600">PI</td>
+            <td>摂動</td>
+            <td><span class="badge badge-global">Global</span></td>
+            <td>モデル非依存</td>
+            <td>表形式</td>
+            <td>O(K × M × N)</td>
+            <td>P1, P4</td>
+          </tr>
+          <tr>
+            <td style="color:var(--accent);font-weight:600">PDP</td>
+            <td>可視化</td>
+            <td><span class="badge badge-global">Global</span></td>
+            <td>モデル非依存</td>
+            <td>表形式</td>
+            <td>O(G × N)</td>
+            <td>P1, P4</td>
+          </tr>
+          <tr>
+            <td style="color:var(--accent);font-weight:600">ICE</td>
+            <td>可視化</td>
+            <td><span class="badge badge-local">Local</span></td>
+            <td>モデル非依存</td>
+            <td>表形式</td>
+            <td>O(G × N)</td>
+            <td>P1</td>
+          </tr>
+          <tr>
+            <td style="color:var(--accent);font-weight:600">Grad-CAM</td>
+            <td>勾配</td>
+            <td><span class="badge badge-local">Local</span></td>
+            <td>CNN専用</td>
+            <td>画像</td>
+            <td>O(1 forward+backward)</td>
+            <td>P2, P3</td>
+          </tr>
+          <tr>
+            <td style="color:var(--accent);font-weight:600">IG</td>
+            <td>勾配</td>
+            <td><span class="badge badge-local">Local</span></td>
+            <td>微分可能モデル</td>
+            <td>全般</td>
+            <td>O(S × forward+backward)</td>
+            <td>P2, P3</td>
+          </tr>
+          <tr>
+            <td style="color:var(--accent);font-weight:600">Occlusion</td>
+            <td>摂動</td>
+            <td><span class="badge badge-local">Local</span></td>
+            <td>モデル非依存</td>
+            <td>画像</td>
+            <td>O(W × H × 推論)</td>
+            <td>P2, P3</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>ドメイン別 XAI適用まとめ</h2>
+    <table>
+      <thead>
+        <tr><th>Problem</th><th>ドメイン</th><th>主な知見</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td style="color:var(--accent)">P1: 住宅価格</td>
+          <td>不動産</td>
+          <td>収入中央値(MedInc)が最重要。緯度経度は位置による価格差を捕捉。PDP/ICEで非線形関係を可視化。</td>
+        </tr>
+        <tr>
+          <td style="color:var(--accent)">P2: 動物分類</td>
+          <td>画像認識</td>
+          <td>Grad-CAMは対象物の輪郭・形状に注目。IGはテクスチャレベルの寄与を可視化。Occlusionは粗い領域重要度。</td>
+        </tr>
+        <tr>
+          <td style="color:var(--accent)">P3: 顔識別</td>
+          <td>顔認識</td>
+          <td>目・鼻・口周辺が識別の鍵。人物によって注目領域が異なる。バイアス検出への応用可能性。</td>
+        </tr>
+        <tr>
+          <td style="color:var(--accent)">P4: 電力系統</td>
+          <td>エネルギー</td>
+          <td>線路負荷率・電圧偏差が異常検知の鍵。無効電力・負荷率が電圧安定性の支配因子。</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+</div><!-- /main -->
+
+<script>
+// Tab switching
+function switchTab(tabId) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-' + tabId).classList.add('active');
+  event.target.closest('.tab-btn').classList.add('active');
+}
+
+// Lightbox
+function openLightbox(container) {
+  const img = container.querySelector('img');
+  if (!img || !img.src) return;
+  document.getElementById('lightbox-img').src = img.src;
+  document.getElementById('lightbox').classList.add('active');
+}
+function closeLightbox() {
+  document.getElementById('lightbox').classList.remove('active');
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
+
+// === PROBLEM 1: Housing ===
+let housingModel = 'rf';
+let housingSample = 0;
+let housingLimeModel = 'rf';
+let housingLimeSample = 0;
+let housingPDPModel = 'rf';
+
+function selectHousingMethod(method) {
+  document.querySelectorAll('.housing-method-content').forEach(el => el.style.display = 'none');
+  document.getElementById('housing-' + method).style.display = 'block';
+  const pills = document.querySelectorAll('#housing-methods .method-pill');
+  pills.forEach(p => p.classList.remove('active'));
+  event.target.classList.add('active');
+}
+
+function selectHousingShapModel(model) {
+  housingModel = model;
+  updateHousingShap();
+  const pills = document.querySelectorAll('#housing-shap-model .method-pill');
+  pills.forEach(p => p.classList.remove('active'));
+  event.target.classList.add('active');
+}
+
+function selectHousingSample(idx) {
+  housingSample = idx;
+  updateHousingShap();
+  const btns = document.querySelectorAll('#housing-shap-samples .sample-btn');
+  btns.forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+}
+
+function updateHousingShap() {
+  setImg('housing-shap-summary', 'problem1_housing/results/shap_summary_' + housingModel + '.png');
+  setImg('housing-shap-bar', 'problem1_housing/results/shap_bar_' + housingModel + '.png');
+  setImg('housing-shap-dep', 'problem1_housing/results/shap_dependence_' + housingModel + '.png');
+  setImg('housing-shap-waterfall', 'problem1_housing/results/shap_waterfall_' + housingModel + '_sample' + housingSample + '.png');
+}
+
+function selectHousingLime(model) {
+  housingLimeModel = model;
+  updateHousingLime();
+  const pills = event.target.parentElement.querySelectorAll('.method-pill');
+  pills.forEach(p => p.classList.remove('active'));
+  event.target.classList.add('active');
+}
+function selectHousingLimeSample(idx) {
+  housingLimeSample = idx;
+  updateHousingLime();
+  const btns = document.querySelectorAll('#housing-lime-samples .sample-btn');
+  btns.forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+}
+function updateHousingLime() {
+  setImg('housing-lime-img', 'problem1_housing/results/lime_' + housingLimeModel + '_sample' + housingLimeSample + '.png');
+}
+
+function selectHousingPDP(model) {
+  housingPDPModel = model;
+  setImg('housing-pdp-img', 'problem1_housing/results/pdp_' + model + '.png');
+  setImg('housing-ice-img', 'problem1_housing/results/ice_' + model + '.png');
+  const pills = event.target.parentElement.querySelectorAll('.method-pill');
+  pills.forEach(p => p.classList.remove('active'));
+  event.target.classList.add('active');
+}
+
+// === PROBLEM 2: Animals ===
+function selectAnimalsMethod(method) {
+  document.querySelectorAll('.animals-method-content').forEach(el => el.style.display = 'none');
+  document.getElementById('animals-' + method).style.display = 'block';
+  const pills = document.querySelectorAll('#animals-methods .method-pill');
+  pills.forEach(p => p.classList.remove('active'));
+  event.target.classList.add('active');
+}
+function selectAnimalsSample(method, idx) {
+  setImg('animals-' + method + '-detail', 'problem2_animals/results/' + method + '_sample' + idx + '.png');
+  const btns = event.target.parentElement.querySelectorAll('.sample-btn');
+  btns.forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+}
+
+// === PROBLEM 3: Faces ===
+function selectFacesMethod(method) {
+  document.querySelectorAll('.faces-method-content').forEach(el => el.style.display = 'none');
+  document.getElementById('faces-' + method).style.display = 'block';
+  const pills = document.querySelectorAll('#faces-methods .method-pill');
+  pills.forEach(p => p.classList.remove('active'));
+  event.target.classList.add('active');
+}
+function selectFacesSample(method, idx) {
+  setImg('faces-' + method + '-detail', 'problem3_faces/results/' + method + '_sample' + idx + '.png');
+  const btns = event.target.parentElement.querySelectorAll('.sample-btn');
+  btns.forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+}
+
+// === PROBLEM 4: Power ===
+function selectPowerCase(caseId) {
+  document.querySelectorAll('.power-case-content').forEach(el => el.style.display = 'none');
+  document.getElementById('power-' + caseId).style.display = 'block';
+  const pills = document.querySelectorAll('#power-cases .method-pill');
+  pills.forEach(p => p.classList.remove('active'));
+  event.target.classList.add('active');
+}
+function selectPowerXAI(caseId, method) {
+  const parent = document.getElementById('power-' + caseId + '-xai');
+  parent.querySelectorAll('.power-xai-content').forEach(el => el.style.display = 'none');
+  document.getElementById('power-' + caseId + '-' + method).style.display = 'block';
+  const pills = event.target.parentElement.querySelectorAll('.method-pill');
+  pills.forEach(p => p.classList.remove('active'));
+  event.target.classList.add('active');
+}
+function selectPowerSample(caseId, prefix, idx) {
+  setImg('power-' + caseId + '-' + prefix.replace('_sample','').replace('_waterfall','') + (prefix.includes('waterfall') ? '-waterfall' : '-img'),
+         'problem4_power/results/' + caseId + '_' + prefix + idx + '.png');
+  const btns = event.target.parentElement.querySelectorAll('.sample-btn');
+  btns.forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+}
+
+// Utility
+function setImg(containerId, src) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  let img = container.querySelector('img');
+  if (!img) {
+    container.innerHTML = '';
+    img = document.createElement('img');
+    container.appendChild(img);
+  }
+  img.src = src;
+  img.onerror = function() { container.innerHTML = '<div class="img-placeholder">run_all.sh 実行後に表示されます</div>'; };
+}
+
+// Render KaTeX
+document.addEventListener('DOMContentLoaded', function() {
+  renderMathInElement(document.body, {
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '$', right: '$', display: false}
+    ],
+    throwOnError: false
+  });
+});
+</script>
+</body>
+</html>
