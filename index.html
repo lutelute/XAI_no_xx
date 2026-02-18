@@ -354,6 +354,9 @@ tr:hover { background: var(--bg-hover); }
   <button class="tab-btn" onclick="switchTab('taxonomy')">
     <span class="tab-icon">&#128218;</span>XAI体系分類
   </button>
+  <button class="tab-btn" onclick="switchTab('xai_nn')">
+    <span class="tab-icon">&#128300;</span>XAI×NN構造図
+  </button>
   <button class="tab-btn" onclick="switchTab('comparison')">
     <span class="tab-icon">&#128200;</span>手法比較表
   </button>
@@ -1200,6 +1203,120 @@ tr:hover { background: var(--bg-hover); }
     <h3>PDP (Partial Dependence)</h3>
     <div class="math-block">
       <p>$$\hat{f}_S(x_S) = \frac{1}{n}\sum_{i=1}^{n}\hat{f}(x_S, x_C^{(i)})$$</p>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== XAI × NN ARCHITECTURE ===================== -->
+<div class="tab-content" id="tab-xai_nn">
+  <div class="section">
+    <h2>XAI × NN 構造図</h2>
+    <p style="color:var(--text-secondary);margin-bottom:1rem;">7つのXAI手法がニューラルネットワーク上でどのように動作するかを図解。画像クリックで拡大。</p>
+  </div>
+
+  <!-- Combined overview -->
+  <div class="section">
+    <h3 style="margin-bottom:1rem;">総合図 — CNN + 決定木アンサンブル × 全7手法</h3>
+    <div class="img-container" onclick="openLightbox(this)" style="cursor:pointer;">
+      <img src="taxonomy/results/xai_nn_architecture.png" alt="XAI×NN 総合構造図" style="width:100%;border-radius:var(--radius);">
+    </div>
+  </div>
+
+  <!-- Individual method diagrams -->
+  <div class="section">
+    <h3 style="margin-bottom:1rem;">手法別 解説図（左: モデル模式図 / 右: 手法固有の可視化）</h3>
+    <div style="display:flex;flex-direction:column;gap:1.5rem;">
+      <div>
+        <p style="color:var(--accent5);font-weight:600;margin-bottom:0.5rem;">Grad-CAM — CNN専用 / 勾配ベース</p>
+        <div class="img-container" onclick="openLightbox(this)" style="cursor:pointer;">
+          <img src="taxonomy/results/xai_individual_gradcam.png" alt="Grad-CAM 解説図" style="width:100%;border-radius:var(--radius);">
+        </div>
+      </div>
+      <div>
+        <p style="color:var(--accent5);font-weight:600;margin-bottom:0.5rem;">Integrated Gradients — 微分可能モデル / 勾配ベース</p>
+        <div class="img-container" onclick="openLightbox(this)" style="cursor:pointer;">
+          <img src="taxonomy/results/xai_individual_integrated_gradients.png" alt="Integrated Gradients 解説図" style="width:100%;border-radius:var(--radius);">
+        </div>
+      </div>
+      <div>
+        <p style="color:var(--accent6);font-weight:600;margin-bottom:0.5rem;">Occlusion — モデル非依存 / 摂動ベース</p>
+        <div class="img-container" onclick="openLightbox(this)" style="cursor:pointer;">
+          <img src="taxonomy/results/xai_individual_occlusion.png" alt="Occlusion 解説図" style="width:100%;border-radius:var(--radius);">
+        </div>
+      </div>
+      <div>
+        <p style="color:var(--accent2);font-weight:600;margin-bottom:0.5rem;">TreeSHAP — 決定木専用 / ゲーム理論</p>
+        <div class="img-container" onclick="openLightbox(this)" style="cursor:pointer;">
+          <img src="taxonomy/results/xai_individual_treeshap.png" alt="TreeSHAP 解説図" style="width:100%;border-radius:var(--radius);">
+        </div>
+      </div>
+      <div>
+        <p style="color:var(--accent6);font-weight:600;margin-bottom:0.5rem;">LIME — モデル非依存 / 摂動ベース</p>
+        <div class="img-container" onclick="openLightbox(this)" style="cursor:pointer;">
+          <img src="taxonomy/results/xai_individual_lime.png" alt="LIME 解説図" style="width:100%;border-radius:var(--radius);">
+        </div>
+      </div>
+      <div>
+        <p style="color:var(--accent6);font-weight:600;margin-bottom:0.5rem;">Permutation Importance — モデル非依存 / 摂動ベース</p>
+        <div class="img-container" onclick="openLightbox(this)" style="cursor:pointer;">
+          <img src="taxonomy/results/xai_individual_permutation_importance.png" alt="Permutation Importance 解説図" style="width:100%;border-radius:var(--radius);">
+        </div>
+      </div>
+      <div>
+        <p style="color:var(--accent4);font-weight:600;margin-bottom:0.5rem;">PDP / ICE — モデル非依存 / 可視化系</p>
+        <div class="img-container" onclick="openLightbox(this)" style="cursor:pointer;">
+          <img src="taxonomy/results/xai_individual_pdp_ice.png" alt="PDP/ICE 解説図" style="width:100%;border-radius:var(--radius);">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Architecture-focused diagrams -->
+  <div class="section">
+    <h3 style="margin-bottom:1rem;">構造図（詳細NNアーキテクチャ上にXAIアクセスポイントをオーバーレイ）</h3>
+    <div style="display:flex;flex-direction:column;gap:1.5rem;">
+      <div>
+        <p style="color:var(--accent5);font-weight:600;margin-bottom:0.5rem;">Grad-CAM — Conv層の特徴マップにアクセス</p>
+        <div class="img-container" onclick="openLightbox(this)" style="cursor:pointer;">
+          <img src="taxonomy/results/xai_arch_gradcam.png" alt="Grad-CAM 構造図" style="width:100%;border-radius:var(--radius);">
+        </div>
+      </div>
+      <div>
+        <p style="color:var(--accent5);font-weight:600;margin-bottom:0.5rem;">Integrated Gradients — 入力から出力への勾配積分</p>
+        <div class="img-container" onclick="openLightbox(this)" style="cursor:pointer;">
+          <img src="taxonomy/results/xai_arch_integrated_gradients.png" alt="Integrated Gradients 構造図" style="width:100%;border-radius:var(--radius);">
+        </div>
+      </div>
+      <div>
+        <p style="color:var(--accent6);font-weight:600;margin-bottom:0.5rem;">Occlusion — 入力摂動によるブラックボックス感度分析</p>
+        <div class="img-container" onclick="openLightbox(this)" style="cursor:pointer;">
+          <img src="taxonomy/results/xai_arch_occlusion.png" alt="Occlusion 構造図" style="width:100%;border-radius:var(--radius);">
+        </div>
+      </div>
+      <div>
+        <p style="color:var(--accent2);font-weight:600;margin-bottom:0.5rem;">TreeSHAP — 木の内部構造を利用したShapley値計算</p>
+        <div class="img-container" onclick="openLightbox(this)" style="cursor:pointer;">
+          <img src="taxonomy/results/xai_arch_treeshap.png" alt="TreeSHAP 構造図" style="width:100%;border-radius:var(--radius);">
+        </div>
+      </div>
+      <div>
+        <p style="color:var(--accent6);font-weight:600;margin-bottom:0.5rem;">LIME — 局所的な摂動サンプルによる線形近似</p>
+        <div class="img-container" onclick="openLightbox(this)" style="cursor:pointer;">
+          <img src="taxonomy/results/xai_arch_lime.png" alt="LIME 構造図" style="width:100%;border-radius:var(--radius);">
+        </div>
+      </div>
+      <div>
+        <p style="color:var(--accent6);font-weight:600;margin-bottom:0.5rem;">Permutation Importance — 特徴量シャッフルによる性能低下測定</p>
+        <div class="img-container" onclick="openLightbox(this)" style="cursor:pointer;">
+          <img src="taxonomy/results/xai_arch_permutation_importance.png" alt="Permutation Importance 構造図" style="width:100%;border-radius:var(--radius);">
+        </div>
+      </div>
+      <div>
+        <p style="color:var(--accent4);font-weight:600;margin-bottom:0.5rem;">PDP / ICE — 特徴量を変動させた応答曲線</p>
+        <div class="img-container" onclick="openLightbox(this)" style="cursor:pointer;">
+          <img src="taxonomy/results/xai_arch_pdp_ice.png" alt="PDP/ICE 構造図" style="width:100%;border-radius:var(--radius);">
+        </div>
+      </div>
     </div>
   </div>
 </div>
