@@ -351,11 +351,17 @@ tr:hover { background: var(--bg-hover); }
   <button class="tab-btn" onclick="switchTab('power')">
     <span class="tab-icon">&#9889;</span>Problem 4: 電力系統
   </button>
+  <button class="tab-btn" onclick="switchTab('mnist')">
+    <span class="tab-icon">&#9999;</span>Problem 5: 手書き文字
+  </button>
   <button class="tab-btn" onclick="switchTab('taxonomy')">
     <span class="tab-icon">&#128218;</span>XAI体系分類
   </button>
   <button class="tab-btn" onclick="switchTab('comparison')">
     <span class="tab-icon">&#128200;</span>手法比較表
+  </button>
+  <button class="tab-btn" onclick="switchTab('nn-arch')">
+    <span class="tab-icon">&#128268;</span>XAI×NN構造
   </button>
 </div>
 
@@ -428,6 +434,14 @@ tr:hover { background: var(--bg-hover); }
           <td>RF, GBT</td>
           <td>SHAP, LIME, PI, PDP</td>
         </tr>
+        <tr>
+          <td style="color:var(--accent)">5. 手書き文字</td>
+          <td>文字認識</td>
+          <td>グレー画像 (28x28)</td>
+          <td>10クラス分類</td>
+          <td>CNN</td>
+          <td>Grad-CAM, IG, Occlusion</td>
+        </tr>
       </tbody>
     </table>
   </div>
@@ -442,7 +456,34 @@ tr:hover { background: var(--bg-hover); }
 <div class="tab-content" id="tab-housing">
   <div class="section">
     <h2>Problem 1: California Housing — 住宅価格予測</h2>
-    <p>California Housing データセット（8特徴量）を用いた住宅価格の回帰予測。RandomForest と GradientBoosting を学習し、複数のXAI手法で特徴量の寄与を解析。</p>
+
+    <div class="info-card" style="margin-bottom:1rem;border-left:3px solid var(--accent1);">
+      <p style="color:var(--accent1);font-weight:bold;margin-bottom:0.5rem;">問題設定</p>
+      <p style="color:var(--text-secondary);font-size:0.85rem;line-height:1.6;">
+        1990年の米国国勢調査データに基づく <strong>California Housing</strong> データセットを使用。
+        カリフォルニア州の各地区（国勢調査ブロックグループ）について、8つの特徴量から<strong>中央住宅価格</strong>（その地区の住宅価格の中央値）を予測する回帰問題。
+        価格は国勢調査時点での資産評価額の中央値であり、個別の売買価格ではない。単位は×$100K（例: 2.0 = $200,000）。
+      </p>
+      <p style="color:var(--text-secondary);font-size:0.85rem;line-height:1.6;margin-top:0.5rem;">
+        <strong>特徴量:</strong> 収入中央値、築年数、平均部屋数、平均寝室数、人口、平均世帯人数、緯度、経度
+      </p>
+      <p style="color:var(--text-secondary);font-size:0.85rem;line-height:1.6;margin-top:0.3rem;">
+        <strong>XAIの目的:</strong> 「住宅価格を決定する要因は何か」「収入・立地・築年数のうち、どれが最も価格に影響するか」を定量的に可視化する。
+      </p>
+    </div>
+
+    <div class="info-card" style="margin-bottom:1rem;border-left:3px solid var(--accent2);">
+      <p style="color:var(--accent2);font-weight:bold;margin-bottom:0.5rem;">図の読み方</p>
+      <ul style="color:var(--text-secondary);font-size:0.83rem;line-height:1.7;padding-left:1.2rem;">
+        <li><strong>SHAP Beeswarm:</strong> 各点が1サンプル。右に長いほど価格を押し上げ、左ほど押し下げ。色は特徴量の値（赤=高、青=低）。上ほど重要な特徴量。</li>
+        <li><strong>SHAP Bar:</strong> 平均|SHAP値|で特徴量をランキング。棒が長いほど予測への影響が大きい。</li>
+        <li><strong>SHAP Waterfall:</strong> 1軒の住宅について、ベース価格（全体平均）からどの特徴量がいくら価格を上下させたかを積み上げ表示。</li>
+        <li><strong>LIME:</strong> 1軒の周辺データで線形近似し、各特徴量の局所的な寄与を棒グラフで表示。</li>
+        <li><strong>PDP/ICE:</strong> 1特徴量を変化させたときの予測値の応答曲線。ICEは個別サンプル、PDPはその平均。</li>
+        <li><strong>3軒比較:</strong> 異なる価格帯の3軒を並べ、SHAP値で「なぜこの家は高い/安いか」を比較。</li>
+      </ul>
+    </div>
+
     <div class="grid-3" style="margin-top:1rem;">
       <div class="info-card"><div class="label">データ</div><div class="value">California Housing</div><div style="color:var(--text-secondary);font-size:0.8rem">sklearn組込 / 20,640サンプル</div></div>
       <div class="info-card"><div class="label">タスク</div><div class="value">回帰</div><div style="color:var(--text-secondary);font-size:0.8rem">中央住宅価格 (×$100K)</div></div>
@@ -616,10 +657,31 @@ tr:hover { background: var(--bg-hover); }
 <div class="tab-content" id="tab-animals">
   <div class="section">
     <h2>Problem 2: CIFAR-10 — 動物・乗物分類</h2>
-    <p>CIFAR-10データセット（32x32カラー画像、10クラス）をResNet18で分類し、畳み込みニューラルネットワークの判断根拠を可視化。</p>
+
+    <div class="info-card" style="margin-bottom:1rem;border-left:3px solid var(--accent2);">
+      <p style="color:var(--accent2);font-weight:bold;margin-bottom:0.5rem;">問題設定</p>
+      <p style="color:var(--text-secondary);font-size:0.85rem;line-height:1.6;">
+        <strong>CIFAR-10</strong> は32×32ピクセルのカラー自然画像60,000枚を10クラス（飛行機、自動車、鳥、猫、鹿、犬、蛙、馬、船、トラック）に分類するベンチマーク。
+        ImageNetで事前学習済みの <strong>ResNet18</strong> をCIFAR-10にfine-tuneし、深層CNNの判断根拠を3つのXAI手法で可視化する。
+      </p>
+      <p style="color:var(--text-secondary);font-size:0.85rem;line-height:1.6;margin-top:0.3rem;">
+        <strong>XAIの目的:</strong> 「CNNは画像のどの領域を見て分類しているか」を明らかにし、物体本体を見ているか背景に依存していないかを検証する。
+      </p>
+    </div>
+
+    <div class="info-card" style="margin-bottom:1rem;border-left:3px solid var(--accent3);">
+      <p style="color:var(--accent3);font-weight:bold;margin-bottom:0.5rem;">図の読み方</p>
+      <ul style="color:var(--text-secondary);font-size:0.83rem;line-height:1.7;padding-left:1.2rem;">
+        <li><strong>Grad-CAM:</strong> 最終畳み込み層の勾配で重み付けしたヒートマップ。赤い領域=モデルが注目している箇所。物体本体が赤ければ正しく認識。</li>
+        <li><strong>Integrated Gradients:</strong> ピクセル単位の帰属値。基準画像（黒画像）から入力までの勾配を積分。明るいピクセル=予測に強く寄与。</li>
+        <li><strong>Occlusion Sensitivity:</strong> 画像の一部を隠して予測変化を測定。赤い領域=隠すと予測確信度が大きく下がる重要部位。</li>
+        <li><strong>手法比較:</strong> 3手法を同じ画像に適用し、注目領域の一致・相違を確認。複数手法で一致する領域ほど信頼性が高い。</li>
+      </ul>
+    </div>
+
     <div class="grid-3" style="margin-top:1rem;">
       <div class="info-card"><div class="label">データ</div><div class="value">CIFAR-10</div><div style="color:var(--text-secondary);font-size:0.8rem">32×32 カラー / 60,000枚</div></div>
-      <div class="info-card"><div class="label">タスク</div><div class="value">10クラス分類</div><div style="color:var(--text-secondary);font-size:0.8rem">airplane, cat, dog, etc.</div></div>
+      <div class="info-card"><div class="label">タスク</div><div class="value">10クラス分類</div><div style="color:var(--text-secondary);font-size:0.8rem">飛行機, 猫, 犬, 馬 等</div></div>
       <div class="info-card"><div class="label">モデル</div><div class="value">ResNet18</div><div style="color:var(--text-secondary);font-size:0.8rem">ImageNet事前学習 → fine-tune</div></div>
     </div>
   </div>
@@ -732,7 +794,29 @@ tr:hover { background: var(--bg-hover); }
 <div class="tab-content" id="tab-faces">
   <div class="section">
     <h2>Problem 3: LFW — 顔識別</h2>
-    <p>LFW (Labeled Faces in the Wild) データセットで人物を識別するCNNを学習し、「AIは顔のどこを見て人物を判別しているか」をXAIで解析。プライバシー・バイアスの議論につなげる。</p>
+
+    <div class="info-card" style="margin-bottom:1rem;border-left:3px solid var(--accent3);">
+      <p style="color:var(--accent3);font-weight:bold;margin-bottom:0.5rem;">問題設定</p>
+      <p style="color:var(--text-secondary);font-size:0.85rem;line-height:1.6;">
+        <strong>LFW (Labeled Faces in the Wild)</strong> は実世界のニュース写真から収集された顔画像データセット。
+        出現頻度の高い著名人の顔画像（62×47ピクセル、グレースケール）を用いて、<strong>人物識別</strong>（誰の顔か分類）を行うCNNを学習する。
+      </p>
+      <p style="color:var(--text-secondary);font-size:0.85rem;line-height:1.6;margin-top:0.3rem;">
+        <strong>XAIの目的:</strong> 「AIは顔のどの部位を見て人物を識別しているか」を可視化する。
+        目・鼻・口などの顔パーツを見ているか、髪型や背景に依存していないかを検証し、AI倫理（プライバシー・バイアス）の議論につなげる。
+      </p>
+    </div>
+
+    <div class="info-card" style="margin-bottom:1rem;border-left:3px solid var(--accent4);">
+      <p style="color:var(--accent4);font-weight:bold;margin-bottom:0.5rem;">図の読み方</p>
+      <ul style="color:var(--text-secondary);font-size:0.83rem;line-height:1.7;padding-left:1.2rem;">
+        <li><strong>Grad-CAM:</strong> 赤い領域がモデルの注目箇所。顔の中心部（目・鼻周辺）が赤ければ、顔の特徴で識別している証拠。</li>
+        <li><strong>Integrated Gradients:</strong> ピクセル単位で識別への寄与度を可視化。明るい部分が重要。額・頬など人物固有の特徴に反応しているか確認。</li>
+        <li><strong>Occlusion:</strong> 顔の一部を隠して予測変化を測定。例えば目を隠すと予測が大きく変わるなら、目が識別に重要であることを示す。</li>
+        <li><strong>手法比較:</strong> 3手法の一致度が高い領域は、モデルが一貫して注目する信頼性の高い判断根拠。</li>
+      </ul>
+    </div>
+
     <div class="grid-3" style="margin-top:1rem;">
       <div class="info-card"><div class="label">データ</div><div class="value">LFW</div><div style="color:var(--text-secondary);font-size:0.8rem">sklearn組込 / グレースケール</div></div>
       <div class="info-card"><div class="label">タスク</div><div class="value">人物識別</div><div style="color:var(--text-secondary);font-size:0.8rem">出現頻度上位5-7人</div></div>
@@ -865,7 +949,36 @@ tr:hover { background: var(--bg-hover); }
 <div class="tab-content" id="tab-power">
   <div class="section">
     <h2>Problem 4: 電力系統 — 潮流異常検知 &amp; 電圧安定性</h2>
-    <p>電力系統のリアルタイム監視におけるML予測の解釈性を検証。2つのケーススタディ（潮流異常検知・電圧安定性限界予測）でXAI解析を実施。</p>
+
+    <div class="info-card" style="margin-bottom:1rem;border-left:3px solid var(--accent4);">
+      <p style="color:var(--accent4);font-weight:bold;margin-bottom:0.5rem;">問題設定</p>
+      <p style="color:var(--text-secondary);font-size:0.85rem;line-height:1.6;">
+        電力系統のリアルタイム監視において、MLモデルの予測根拠を運用者が理解できることは安全運用の前提条件である。
+        10母線の電力系統を模擬した合成データを用い、2つのケーススタディでXAI解析を実施する。
+      </p>
+      <p style="color:var(--text-secondary);font-size:0.85rem;line-height:1.6;margin-top:0.5rem;">
+        <strong>Case 1 — 潮流異常検知（分類）:</strong>
+        N-1想定事故（線路開放、発電機脱落、電圧崩壊前兆、カスケード障害）による異常パターンを検出。
+        40次元の特徴量（有効電力・無効電力・電圧・線路負荷率）から正常/異常を二値分類。
+        「どの母線・どの系統パラメータが異常判定の根拠か」をXAIで特定する。
+      </p>
+      <p style="color:var(--text-secondary);font-size:0.85rem;line-height:1.6;margin-top:0.3rem;">
+        <strong>Case 2 — 電圧安定性余裕予測（回帰）:</strong>
+        電圧安定性余裕（Voltage Stability Margin, 0-100%）を10次元の特徴量から予測。
+        「電圧崩壊リスクを高める主要因は何か」をXAIで解明する。
+      </p>
+    </div>
+
+    <div class="info-card" style="margin-bottom:1rem;border-left:3px solid var(--accent1);">
+      <p style="color:var(--accent1);font-weight:bold;margin-bottom:0.5rem;">図の読み方</p>
+      <ul style="color:var(--text-secondary);font-size:0.83rem;line-height:1.7;padding-left:1.2rem;">
+        <li><strong>系統図:</strong> 母線の色は電圧レベル（緑=正常、黄=注意、赤=危険）。異常時の色変化でどこに問題が生じるか直感的に把握。</li>
+        <li><strong>SHAP Summary:</strong> 40特徴量のうちどれが異常検知に重要か。線路負荷率が上位なら「過負荷が検知の主要根拠」。</li>
+        <li><strong>SHAP Waterfall:</strong> 個別の異常サンプルで、どの母線・線路が異常判定を押し上げたかを可視化。異常パターンごとに異なる特徴量が寄与。</li>
+        <li><strong>PDP:</strong> 特徴量値と予測の関係。例えば「線路負荷率80%超で異常確率が急上昇」など閾値的な挙動を発見。</li>
+        <li><strong>比較プロット:</strong> Case 1（局所的・瞬時的な異常）とCase 2（大域的・緩やかな安定性低下）で重要特徴量がどう異なるかを対比。</li>
+      </ul>
+    </div>
   </div>
 
   <div class="section">
@@ -1047,6 +1160,132 @@ tr:hover { background: var(--bg-hover); }
     <h2>ケース間比較</h2>
     <div class="img-container" onclick="openLightbox(this)">
       <img src="problem4_power/results/power_comparison.png" alt="Power Comparison" onerror="this.parentElement.innerHTML='<div class=img-placeholder>run_all.sh 実行後に表示されます</div>'">
+    </div>
+  </div>
+</div>
+
+<!-- ===================== PROBLEM 5: MNIST ===================== -->
+<div class="tab-content" id="tab-mnist">
+  <div class="section">
+    <h2>Problem 5: MNIST — 手書き数字分類</h2>
+
+    <div class="info-card" style="margin-bottom:1rem;border-left:3px solid var(--accent1);">
+      <p style="color:var(--accent1);font-weight:bold;margin-bottom:0.5rem;">問題設定</p>
+      <p style="color:var(--text-secondary);font-size:0.85rem;line-height:1.6;">
+        <strong>MNIST</strong> は機械学習の「Hello World」とも呼ばれる手書き数字（0-9）の分類データセット。
+        28×28ピクセルのグレースケール画像70,000枚を10クラスに分類する。
+        シンプルなCNN（3層畳み込み）を学習し、「モデルは数字のどの部分の形状を見て判別しているか」をXAIで可視化する。
+      </p>
+      <p style="color:var(--text-secondary);font-size:0.85rem;line-height:1.6;margin-top:0.3rem;">
+        <strong>XAIの目的:</strong> 例えば「6」と「9」の区別、「3」と「8」の区別など、紛らわしい数字をモデルがどの画素の違いで判別しているかを明らかにする。
+      </p>
+    </div>
+
+    <div class="info-card" style="margin-bottom:1rem;border-left:3px solid var(--accent2);">
+      <p style="color:var(--accent2);font-weight:bold;margin-bottom:0.5rem;">図の読み方</p>
+      <ul style="color:var(--text-secondary);font-size:0.83rem;line-height:1.7;padding-left:1.2rem;">
+        <li><strong>Grad-CAM:</strong> CNN最終層の活性化ヒートマップ。赤い領域=分類に重要な画素領域。数字のストロークの特徴的な部分（曲線、交差点など）に注目する傾向。</li>
+        <li><strong>Integrated Gradients:</strong> ピクセル単位の帰属値。明るい部分=予測への寄与が大きいピクセル。数字の輪郭やエッジが強調される。</li>
+        <li><strong>Occlusion:</strong> 一部を隠して予測変化を測定。数字の識別に不可欠な部位（例: 「4」の横線）が赤く表示される。</li>
+      </ul>
+    </div>
+
+    <div class="grid-3" style="margin-top:1rem;">
+      <div class="info-card"><div class="label">データ</div><div class="value">MNIST</div><div style="color:var(--text-secondary);font-size:0.8rem">28×28 グレースケール / 70,000枚</div></div>
+      <div class="info-card"><div class="label">タスク</div><div class="value">10クラス分類</div><div style="color:var(--text-secondary);font-size:0.8rem">手書き数字 0-9</div></div>
+      <div class="info-card"><div class="label">モデル</div><div class="value">CNN (PyTorch)</div><div style="color:var(--text-secondary);font-size:0.8rem">3層CNN + FC</div></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>サンプル画像</h2>
+    <div class="img-container" onclick="openLightbox(this)">
+      <img src="problem5_mnist/results/sample_digits.png" alt="Sample Digits" onerror="this.parentElement.innerHTML='<div class=img-placeholder>python 00_train_model.py 実行後に表示されます</div>'">
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>モデル性能</h2>
+    <div class="img-container" onclick="openLightbox(this)">
+      <img src="problem5_mnist/results/confusion_matrix.png" alt="Confusion Matrix" onerror="this.parentElement.innerHTML='<div class=img-placeholder>python 00_train_model.py 実行後に表示されます</div>'">
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>XAI 解析結果</h2>
+    <div class="method-selector" id="mnist-methods">
+      <button class="method-pill" onclick="selectMnistMethod('gradcam')">Grad-CAM</button>
+      <button class="method-pill" onclick="selectMnistMethod('ig')">Integrated Gradients</button>
+      <button class="method-pill" onclick="selectMnistMethod('occlusion')">Occlusion Sensitivity</button>
+      <button class="method-pill active" onclick="selectMnistMethod('comparison')">手法比較</button>
+    </div>
+
+    <!-- Grad-CAM -->
+    <div class="mnist-method-content" id="mnist-gradcam" style="display:none;">
+      <h3>Grad-CAM — 数字のどこを見ているか</h3>
+      <div class="img-container" onclick="openLightbox(this)">
+        <img src="problem5_mnist/results/gradcam_grid.png" alt="Grad-CAM Grid" onerror="this.parentElement.innerHTML='<div class=img-placeholder>python 01_gradcam.py 実行後に表示されます</div>'">
+      </div>
+      <h3>個別サンプル</h3>
+      <div class="sample-selector" id="mnist-gradcam-samples">
+        <button class="sample-btn active" onclick="selectMnistSample('gradcam',0)">0</button>
+        <button class="sample-btn" onclick="selectMnistSample('gradcam',1)">1</button>
+        <button class="sample-btn" onclick="selectMnistSample('gradcam',2)">2</button>
+        <button class="sample-btn" onclick="selectMnistSample('gradcam',3)">3</button>
+        <button class="sample-btn" onclick="selectMnistSample('gradcam',4)">4</button>
+      </div>
+      <div class="img-container" onclick="openLightbox(this)" id="mnist-gradcam-detail">
+        <img src="problem5_mnist/results/gradcam_sample0.png" alt="Grad-CAM Detail" onerror="this.parentElement.innerHTML='<div class=img-placeholder>python 01_gradcam.py 実行後に表示されます</div>'">
+      </div>
+    </div>
+
+    <!-- Integrated Gradients -->
+    <div class="mnist-method-content" id="mnist-ig" style="display:none;">
+      <h3>Integrated Gradients — ピクセル単位の帰属</h3>
+      <div class="img-container" onclick="openLightbox(this)">
+        <img src="problem5_mnist/results/ig_grid.png" alt="IG Grid" onerror="this.parentElement.innerHTML='<div class=img-placeholder>python 02_integrated_gradients.py 実行後に表示されます</div>'">
+      </div>
+      <h3>個別サンプル</h3>
+      <div class="sample-selector">
+        <button class="sample-btn active" onclick="selectMnistSample('ig',0)">0</button>
+        <button class="sample-btn" onclick="selectMnistSample('ig',1)">1</button>
+        <button class="sample-btn" onclick="selectMnistSample('ig',2)">2</button>
+        <button class="sample-btn" onclick="selectMnistSample('ig',3)">3</button>
+        <button class="sample-btn" onclick="selectMnistSample('ig',4)">4</button>
+      </div>
+      <div class="img-container" onclick="openLightbox(this)" id="mnist-ig-detail">
+        <img src="problem5_mnist/results/ig_sample0.png" alt="IG Detail" onerror="this.parentElement.innerHTML='<div class=img-placeholder>python 02_integrated_gradients.py 実行後に表示されます</div>'">
+      </div>
+    </div>
+
+    <!-- Occlusion -->
+    <div class="mnist-method-content" id="mnist-occlusion" style="display:none;">
+      <h3>Occlusion Sensitivity — 隠して重要度を測る</h3>
+      <div class="img-container" onclick="openLightbox(this)">
+        <img src="problem5_mnist/results/occlusion_grid.png" alt="Occlusion Grid" onerror="this.parentElement.innerHTML='<div class=img-placeholder>python 03_occlusion.py 実行後に表示されます</div>'">
+      </div>
+      <h3>個別サンプル</h3>
+      <div class="sample-selector">
+        <button class="sample-btn active" onclick="selectMnistSample('occlusion',0)">0</button>
+        <button class="sample-btn" onclick="selectMnistSample('occlusion',1)">1</button>
+        <button class="sample-btn" onclick="selectMnistSample('occlusion',2)">2</button>
+        <button class="sample-btn" onclick="selectMnistSample('occlusion',3)">3</button>
+        <button class="sample-btn" onclick="selectMnistSample('occlusion',4)">4</button>
+      </div>
+      <div class="img-container" onclick="openLightbox(this)" id="mnist-occlusion-detail">
+        <img src="problem5_mnist/results/occlusion_sample0.png" alt="Occlusion Detail" onerror="this.parentElement.innerHTML='<div class=img-placeholder>python 03_occlusion.py 実行後に表示されます</div>'">
+      </div>
+    </div>
+
+    <!-- Comparison -->
+    <div class="mnist-method-content" id="mnist-comparison">
+      <h3>手法比較: Grad-CAM vs Integrated Gradients vs Occlusion</h3>
+      <div class="img-container" onclick="openLightbox(this)">
+        <img src="problem5_mnist/results/comparison_methods.png" alt="Methods Comparison" onerror="this.parentElement.innerHTML='<div class=img-placeholder>python 04_comparison.py 実行後に表示されます</div>'">
+      </div>
+      <div class="img-container" onclick="openLightbox(this)" style="margin-top:1rem;">
+        <img src="problem5_mnist/results/comparison_summary.png" alt="Summary" onerror="this.parentElement.innerHTML='<div class=img-placeholder>python 04_comparison.py 実行後に表示されます</div>'">
+      </div>
     </div>
   </div>
 </div>
@@ -1331,6 +1570,218 @@ tr:hover { background: var(--bg-hover); }
   </div>
 </div>
 
+<!-- ===================== XAI × NN ARCHITECTURE ===================== -->
+<div class="tab-content" id="tab-nn-arch">
+  <div class="section">
+    <h2>XAI手法 × ニューラルネットワーク構造 — アクセスポイント俯瞰図</h2>
+    <p style="color:var(--text-secondary);margin-bottom:1rem;">
+      各XAI手法がモデルのどの層・どのパラメータにアクセスして説明を生成しているかを示す構造図。
+      上段はCNNアーキテクチャ（画像系: Problem 2, 3, 5）、下段は決定木アンサンブル（表形式: Problem 1, 4）。
+    </p>
+    <div class="image-container" onclick="openLightbox(this)" style="cursor:pointer;">
+      <img src="taxonomy/results/xai_nn_architecture.png" alt="XAI×NN構造図" style="width:100%;border-radius:var(--radius);border:1px solid var(--border);">
+    </div>
+  </div>
+
+  <div class="section">
+    <h3>手法別 個別図（7枚） — 左:アーキテクチャ / 右:手法固有の可視化</h3>
+    <p style="color:var(--text-secondary);margin-bottom:1rem;">
+      各XAI手法の動作メカニズムを2パネルで解説。左パネルは対象モデル（CNN / 決定木 / ブラックボックス）、右パネルは手法固有の可視化と数式。クリックで拡大。
+    </p>
+    <div style="display:flex;flex-direction:column;gap:1.2rem;">
+      <div class="image-container" onclick="openLightbox(this)" style="cursor:pointer;">
+        <div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:0.4rem;">
+          <span style="color:#ff6b6b;font-weight:700;font-size:1.1rem;">Grad-CAM</span>
+          <span style="color:var(--text-secondary);font-size:0.85rem;">CNN専用 / 勾配ベース</span>
+        </div>
+        <img src="taxonomy/results/xai_individual_gradcam.png" alt="Grad-CAM" style="width:100%;border-radius:var(--radius);border:2px solid #ff6b6b44;">
+      </div>
+      <div class="image-container" onclick="openLightbox(this)" style="cursor:pointer;">
+        <div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:0.4rem;">
+          <span style="color:#ff6b6b;font-weight:700;font-size:1.1rem;">Integrated Gradients</span>
+          <span style="color:var(--text-secondary);font-size:0.85rem;">微分可能モデル / 勾配ベース</span>
+        </div>
+        <img src="taxonomy/results/xai_individual_integrated_gradients.png" alt="Integrated Gradients" style="width:100%;border-radius:var(--radius);border:2px solid #ff6b6b44;">
+      </div>
+      <div class="image-container" onclick="openLightbox(this)" style="cursor:pointer;">
+        <div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:0.4rem;">
+          <span style="color:#4a9eff;font-weight:700;font-size:1.1rem;">Occlusion</span>
+          <span style="color:var(--text-secondary);font-size:0.85rem;">モデル非依存 / 摂動ベース</span>
+        </div>
+        <img src="taxonomy/results/xai_individual_occlusion.png" alt="Occlusion" style="width:100%;border-radius:var(--radius);border:2px solid #4a9eff44;">
+      </div>
+      <div class="image-container" onclick="openLightbox(this)" style="cursor:pointer;">
+        <div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:0.4rem;">
+          <span style="color:#4ecdc4;font-weight:700;font-size:1.1rem;">TreeSHAP</span>
+          <span style="color:var(--text-secondary);font-size:0.85rem;">決定木専用 / ゲーム理論</span>
+        </div>
+        <img src="taxonomy/results/xai_individual_treeshap.png" alt="TreeSHAP" style="width:100%;border-radius:var(--radius);border:2px solid #4ecdc444;">
+      </div>
+      <div class="image-container" onclick="openLightbox(this)" style="cursor:pointer;">
+        <div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:0.4rem;">
+          <span style="color:#4a9eff;font-weight:700;font-size:1.1rem;">LIME</span>
+          <span style="color:var(--text-secondary);font-size:0.85rem;">モデル非依存 / 摂動ベース</span>
+        </div>
+        <img src="taxonomy/results/xai_individual_lime.png" alt="LIME" style="width:100%;border-radius:var(--radius);border:2px solid #4a9eff44;">
+      </div>
+      <div class="image-container" onclick="openLightbox(this)" style="cursor:pointer;">
+        <div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:0.4rem;">
+          <span style="color:#4a9eff;font-weight:700;font-size:1.1rem;">Permutation Importance</span>
+          <span style="color:var(--text-secondary);font-size:0.85rem;">モデル非依存 / 摂動ベース</span>
+        </div>
+        <img src="taxonomy/results/xai_individual_permutation_importance.png" alt="Permutation Importance" style="width:100%;border-radius:var(--radius);border:2px solid #4a9eff44;">
+      </div>
+      <div class="image-container" onclick="openLightbox(this)" style="cursor:pointer;">
+        <div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:0.4rem;">
+          <span style="color:#ffd93d;font-weight:700;font-size:1.1rem;">PDP / ICE</span>
+          <span style="color:var(--text-secondary);font-size:0.85rem;">モデル非依存 / 可視化系</span>
+        </div>
+        <img src="taxonomy/results/xai_individual_pdp_ice.png" alt="PDP / ICE" style="width:100%;border-radius:var(--radius);border:2px solid #ffd93d44;">
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h3>構造図（7枚） — 詳細なNNアーキテクチャ上でのXAI手法の動作位置</h3>
+    <p style="color:var(--text-secondary);margin-bottom:1rem;">
+      3D特徴マップ・ニューロン・決定木などの詳細なアーキテクチャ構造上に、各XAI手法のアクセスポイントをオーバーレイ表示。クリックで拡大。
+    </p>
+    <div style="display:flex;flex-direction:column;gap:1.2rem;">
+      <div class="image-container" onclick="openLightbox(this)" style="cursor:pointer;">
+        <div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:0.4rem;">
+          <span style="color:#ff6b6b;font-weight:700;font-size:1.1rem;">Grad-CAM</span>
+          <span style="color:var(--text-secondary);font-size:0.85rem;">Conv3 の特徴マップにアクセス</span>
+        </div>
+        <img src="taxonomy/results/xai_arch_gradcam.png" alt="Grad-CAM Architecture" style="width:100%;border-radius:var(--radius);border:2px solid #ff6b6b44;">
+      </div>
+      <div class="image-container" onclick="openLightbox(this)" style="cursor:pointer;">
+        <div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:0.4rem;">
+          <span style="color:#ff6b6b;font-weight:700;font-size:1.1rem;">Integrated Gradients</span>
+          <span style="color:var(--text-secondary);font-size:0.85rem;">入力→出力の全経路で勾配積分</span>
+        </div>
+        <img src="taxonomy/results/xai_arch_integrated_gradients.png" alt="IG Architecture" style="width:100%;border-radius:var(--radius);border:2px solid #ff6b6b44;">
+      </div>
+      <div class="image-container" onclick="openLightbox(this)" style="cursor:pointer;">
+        <div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:0.4rem;">
+          <span style="color:#4a9eff;font-weight:700;font-size:1.1rem;">Occlusion</span>
+          <span style="color:var(--text-secondary);font-size:0.85rem;">入力を遮蔽して出力変化を観測</span>
+        </div>
+        <img src="taxonomy/results/xai_arch_occlusion.png" alt="Occlusion Architecture" style="width:100%;border-radius:var(--radius);border:2px solid #4a9eff44;">
+      </div>
+      <div class="image-container" onclick="openLightbox(this)" style="cursor:pointer;">
+        <div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:0.4rem;">
+          <span style="color:#4ecdc4;font-weight:700;font-size:1.1rem;">TreeSHAP</span>
+          <span style="color:var(--text-secondary);font-size:0.85rem;">木の内部ノードを辿って計算</span>
+        </div>
+        <img src="taxonomy/results/xai_arch_treeshap.png" alt="TreeSHAP Architecture" style="width:100%;border-radius:var(--radius);border:2px solid #4ecdc444;">
+      </div>
+      <div class="image-container" onclick="openLightbox(this)" style="cursor:pointer;">
+        <div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:0.4rem;">
+          <span style="color:#4a9eff;font-weight:700;font-size:1.1rem;">LIME</span>
+          <span style="color:var(--text-secondary);font-size:0.85rem;">入力近傍を摂動してブラックボックス呼出</span>
+        </div>
+        <img src="taxonomy/results/xai_arch_lime.png" alt="LIME Architecture" style="width:100%;border-radius:var(--radius);border:2px solid #4a9eff44;">
+      </div>
+      <div class="image-container" onclick="openLightbox(this)" style="cursor:pointer;">
+        <div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:0.4rem;">
+          <span style="color:#4a9eff;font-weight:700;font-size:1.1rem;">Permutation Importance</span>
+          <span style="color:var(--text-secondary);font-size:0.85rem;">特徴量列をシャッフルして性能低下を計測</span>
+        </div>
+        <img src="taxonomy/results/xai_arch_permutation_importance.png" alt="PI Architecture" style="width:100%;border-radius:var(--radius);border:2px solid #4a9eff44;">
+      </div>
+      <div class="image-container" onclick="openLightbox(this)" style="cursor:pointer;">
+        <div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:0.4rem;">
+          <span style="color:#ffd93d;font-weight:700;font-size:1.1rem;">PDP / ICE</span>
+          <span style="color:var(--text-secondary);font-size:0.85rem;">特徴量を変動させて応答曲線を記録</span>
+        </div>
+        <img src="taxonomy/results/xai_arch_pdp_ice.png" alt="PDP/ICE Architecture" style="width:100%;border-radius:var(--radius);border:2px solid #ffd93d44;">
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h3>色コード</h3>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem;margin-bottom:1.5rem;">
+      <div style="padding:0.8rem;border-radius:var(--radius);border:1px solid #ff6b6b44;background:#ff6b6b11;">
+        <span style="color:#ff6b6b;font-weight:700;">&#9632; 勾配ベース</span>
+        <div style="color:var(--text-secondary);font-size:0.85rem;margin-top:0.3rem;">Grad-CAM, Integrated Gradients</div>
+      </div>
+      <div style="padding:0.8rem;border-radius:var(--radius);border:1px solid #4a9eff44;background:#4a9eff11;">
+        <span style="color:#4a9eff;font-weight:700;">&#9632; 摂動ベース</span>
+        <div style="color:var(--text-secondary);font-size:0.85rem;margin-top:0.3rem;">Occlusion, LIME, Permutation Importance</div>
+      </div>
+      <div style="padding:0.8rem;border-radius:var(--radius);border:1px solid #4ecdc444;background:#4ecdc411;">
+        <span style="color:#4ecdc4;font-weight:700;">&#9632; ゲーム理論</span>
+        <div style="color:var(--text-secondary);font-size:0.85rem;margin-top:0.3rem;">TreeSHAP</div>
+      </div>
+      <div style="padding:0.8rem;border-radius:var(--radius);border:1px solid #ffd93d44;background:#ffd93d11;">
+        <span style="color:#ffd93d;font-weight:700;">&#9632; 可視化系</span>
+        <div style="color:var(--text-secondary);font-size:0.85rem;margin-top:0.3rem;">PDP / ICE</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h3>各手法のアクセスポイント詳細</h3>
+    <div style="overflow-x:auto;">
+      <table>
+        <thead>
+          <tr>
+            <th>手法</th>
+            <th>カテゴリ</th>
+            <th>アクセス対象</th>
+            <th>説明</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="color:#ff6b6b;font-weight:600">Grad-CAM</td>
+            <td>勾配ベース</td>
+            <td>Conv層の特徴マップ + 出力勾配</td>
+            <td>Conv3 の特徴マップ A<sup>k</sup> と出力クラスからの勾配 &part;y<sup>c</sup>/&part;A<sup>k</sup> の重み付け平均でヒートマップを生成</td>
+          </tr>
+          <tr>
+            <td style="color:#ff6b6b;font-weight:600">Integrated Gradients</td>
+            <td>勾配ベース</td>
+            <td>入力→出力の全経路</td>
+            <td>基準入力（黒画像）から実入力まで &alpha; を [0,1] で変化させながら勾配を積分。経路に沿った寄与を計算</td>
+          </tr>
+          <tr>
+            <td style="color:#4a9eff;font-weight:600">Occlusion</td>
+            <td>摂動ベース</td>
+            <td>入力のみ（スライディングウィンドウ）</td>
+            <td>入力画像の一部をグレーパッチで遮蔽し、出力スコアの変化量を各位置でマッピング</td>
+          </tr>
+          <tr>
+            <td style="color:#4ecdc4;font-weight:600">TreeSHAP</td>
+            <td>ゲーム理論</td>
+            <td>木構造（分岐ノード, 分割閾値, 葉ノード値）</td>
+            <td>決定木の内部構造に直接アクセスし、Shapley値を効率的に計算。計算量 O(TLD&sup2;)</td>
+          </tr>
+          <tr>
+            <td style="color:#4a9eff;font-weight:600">LIME</td>
+            <td>摂動ベース</td>
+            <td>入力摂動 → ブラックボックス呼び出し</td>
+            <td>入力周辺にランダム摂動サンプルを生成し、モデルを f(x) として呼び出し、近傍データで局所線形回帰モデルを学習</td>
+          </tr>
+          <tr>
+            <td style="color:#4a9eff;font-weight:600">Permutation Importance</td>
+            <td>摂動ベース</td>
+            <td>特徴量列のシャッフル → モデル評価</td>
+            <td>各特徴量列をランダムシャッフルし、モデルの予測性能（精度/RMSE等）の低下量を特徴量重要度として計測</td>
+          </tr>
+          <tr>
+            <td style="color:#ffd93d;font-weight:600">PDP / ICE</td>
+            <td>可視化系</td>
+            <td>特徴量のグリッド変動 → モデル評価</td>
+            <td>対象特徴量を一定範囲でグリッド状に変動させ、各点でモデルを評価。PDP は全サンプルの平均応答、ICE は個別応答曲線</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
 </div><!-- /main -->
 
 <script>
@@ -1444,6 +1895,21 @@ function selectFacesMethod(method) {
 }
 function selectFacesSample(method, idx) {
   setImg('faces-' + method + '-detail', 'problem3_faces/results/' + method + '_sample' + idx + '.png');
+  const btns = event.target.parentElement.querySelectorAll('.sample-btn');
+  btns.forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+}
+
+// === PROBLEM 5: MNIST ===
+function selectMnistMethod(method) {
+  document.querySelectorAll('.mnist-method-content').forEach(el => el.style.display = 'none');
+  document.getElementById('mnist-' + method).style.display = 'block';
+  const pills = document.querySelectorAll('#mnist-methods .method-pill');
+  pills.forEach(p => p.classList.remove('active'));
+  event.target.classList.add('active');
+}
+function selectMnistSample(method, idx) {
+  setImg('mnist-' + method + '-detail', 'problem5_mnist/results/' + method + '_sample' + idx + '.png');
   const btns = event.target.parentElement.querySelectorAll('.sample-btn');
   btns.forEach(b => b.classList.remove('active'));
   event.target.classList.add('active');

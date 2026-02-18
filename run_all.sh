@@ -91,6 +91,20 @@ run_script "problem4_power/case2_voltage/generate_and_train.py"    "P4-Case2: �
 run_script "problem4_power/xai_analysis.py"                        "P4: XAI 分析 (両ケース)"
 
 # =============================================
+# Problem 5: 手書き文字 (MNIST)
+# =============================================
+echo -e "${GREEN}╔═══════════════════════════════════════════╗${NC}"
+echo -e "${GREEN}║  Problem 5: 手書き文字 (MNIST)            ║${NC}"
+echo -e "${GREEN}╚═══════════════════════════════════════════╝${NC}"
+echo ""
+
+run_script "problem5_mnist/00_train_model.py"           "P5: CNN 学習 (MNIST)"
+run_script "problem5_mnist/01_gradcam.py"               "P5: Grad-CAM 分析"
+run_script "problem5_mnist/02_integrated_gradients.py"   "P5: Integrated Gradients"
+run_script "problem5_mnist/03_occlusion.py"             "P5: Occlusion Sensitivity"
+run_script "problem5_mnist/04_comparison.py"            "P5: 手法比較"
+
+# =============================================
 # 完了
 # =============================================
 echo ""
@@ -103,6 +117,7 @@ echo "  problem1_housing/results/"
 echo "  problem2_animals/results/"
 echo "  problem3_faces/results/"
 echo "  problem4_power/results/"
+echo "  problem5_mnist/results/"
 echo ""
 echo "ビューアを開く:"
 echo "  open viewer.html"

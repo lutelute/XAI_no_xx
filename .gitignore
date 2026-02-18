@@ -21,3 +21,5 @@ Thumbs.db
 # IDE
 .vscode/
 .idea/
+problem5_mnist/data/
+problem5_mnist/models/

@@ -181,32 +181,57 @@ def main():
     print("保存: three_houses_shap.png")
 
     # ============================================================
-    # 図3: SHAP waterfall 3枚横並び
+    # 図3: SHAP waterfall 3枚を個別に生成して横に結合
     # ============================================================
-    fig, axes = plt.subplots(1, 3, figsize=(20, 7), dpi=DPI)
-
-    for col, (h, ax) in enumerate(zip(houses, axes)):
-        # SHAP Explanation オブジェクトを再構築
+    waterfall_imgs = []
+    for col, h in enumerate(houses):
         exp = shap.Explanation(
             values=h['shap'],
             base_values=h['base'],
             data=h['features'],
             feature_names=feature_names,
         )
-        plt.sca(ax)
+        fig_w, ax_w = plt.subplots(figsize=(10, 7), dpi=DPI)
         shap.plots.waterfall(exp, show=False, max_display=8)
 
         pred_str = f'${h["pred"]*100:.1f}K'
         actual_str = f'${h["actual"]*100:.1f}K'
-        ax.set_title(f'住宅 {col+1}\n予測: {pred_str} (真値: {actual_str})',
-                     fontsize=11, fontweight='bold', pad=10)
+        ax_w.set_title(f'住宅 {col+1} — 予測: {pred_str} (実際: {actual_str})',
+                       fontsize=13, fontweight='bold', pad=10)
+        plt.tight_layout()
+        tmp_path = os.path.join(RESULTS_DIR, f'_tmp_waterfall_{col}.png')
+        fig_w.savefig(tmp_path, dpi=DPI, bbox_inches='tight')
+        plt.close(fig_w)
+        waterfall_imgs.append(tmp_path)
 
-    fig.suptitle('SHAP Waterfall — 3軒同時比較\n'
-                 '各特徴量がベース価格からどれだけ予測を押し上げ/押し下げたか',
-                 fontsize=14, fontweight='bold', y=1.04)
-    plt.tight_layout()
-    plt.savefig(os.path.join(RESULTS_DIR, 'three_houses_waterfall.png'), dpi=DPI, bbox_inches='tight')
-    plt.close('all')
+    # 3枚を横に結合
+    from PIL import Image
+    imgs = [Image.open(p) for p in waterfall_imgs]
+    max_h = max(im.height for im in imgs)
+    total_w = sum(im.width for im in imgs) + 20 * 2  # 間隔
+    canvas = Image.new('RGB', (total_w, max_h + 80), color=(13, 17, 23))
+
+    # タイトル描画
+    from PIL import ImageDraw, ImageFont
+    draw = ImageDraw.Draw(canvas)
+    title = 'SHAP Waterfall — 3軒同時比較'
+    try:
+        title_font = ImageFont.truetype('/System/Library/Fonts/ヒラギノ角ゴシック W6.ttc', 36)
+    except Exception:
+        title_font = ImageFont.load_default()
+    bbox = draw.textbbox((0, 0), title, font=title_font)
+    tw = bbox[2] - bbox[0]
+    draw.text(((total_w - tw) // 2, 15), title, fill=(255, 255, 255), font=title_font)
+
+    x_offset = 0
+    for i, im in enumerate(imgs):
+        y_offset = 80 + (max_h - im.height) // 2
+        canvas.paste(im, (x_offset, y_offset))
+        x_offset += im.width + 20
+
+    canvas.save(os.path.join(RESULTS_DIR, 'three_houses_waterfall.png'))
+    for p in waterfall_imgs:
+        os.remove(p)
     print("保存: three_houses_waterfall.png")
 
     # ============================================================

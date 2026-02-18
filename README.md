@@ -1,11 +1,35 @@
 # XAI 解析プラットフォーム
 
 講演・報告用のインタラクティブ XAI (Explainable AI) 解析プラットフォーム。
-4 つの異なる問題設定に対して網羅的に XAI 手法を適用し、ブラウザで操作できるビューアで結果を閲覧できる。
+5 つの異なる問題設定に対して網羅的に XAI 手法を適用し、ブラウザで操作できるビューアで結果を閲覧できる。
 
 ## デモ
 
-`viewer.html` をブラウザで開くだけで全結果をインタラクティブに閲覧可能（サーバー不要）。
+**GitHub Pages**: https://lutelute.github.io/XAI_no_xx/
+
+ローカルでも `viewer.html` をブラウザで開くだけで全結果を閲覧可能（サーバー不要）。
+
+## XAI 手法 × NN 構造図
+
+7 つの XAI 手法がニューラルネットワーク上でどのように動作するかを 3 種類の図で解説:
+
+| 図の種類 | 内容 | 枚数 |
+|----------|------|------|
+| 総合図 | CNN + 決定木の 2 パネルに全 7 手法をオーバーレイ | 1 |
+| 手法別 解説図 | 左: モデル模式図 + 右: 手法固有の可視化 (ヒートマップ, 散布図, 棒グラフ, 応答曲線) | 7 |
+| 構造図 | 3D 特徴マップ・ニューロン・決定木の詳細構造上に XAI アクセスポイントをオーバーレイ | 7 |
+
+### 手法とモデルの対応
+
+| 手法 | カテゴリ | 対象モデル |
+|------|----------|-----------|
+| Grad-CAM | 勾配ベース | CNN 専用 (Conv 層の特徴マップにアクセス) |
+| Integrated Gradients | 勾配ベース | 微分可能モデル (CNN 等) |
+| Occlusion | 摂動ベース | モデル非依存 (ブラックボックス) |
+| TreeSHAP | ゲーム理論 | 決定木専用 (木の内部構造を利用) |
+| LIME | 摂動ベース | モデル非依存 (ブラックボックス) |
+| Permutation Importance | 摂動ベース | モデル非依存 (ブラックボックス) |
+| PDP / ICE | 可視化系 | モデル非依存 (ブラックボックス) |
 
 ## プロジェクト構成
 
@@ -14,6 +38,7 @@ XAI_no_xx/
 ├── requirements.txt          # Python 依存パッケージ
 ├── run_all.sh                # 全分析を一括実行
 ├── viewer.html               # インタラクティブ講演ビューア
+├── index.html                # GitHub Pages エントリポイント
 │
 ├── problem1_housing/         # 表形式: 住宅価格予測 (回帰)
 │   ├── 00_train_model.py     #   RF + GBT 学習
@@ -22,6 +47,7 @@ XAI_no_xx/
 │   ├── 03_permutation_analysis.py  # Permutation Importance
 │   ├── 04_pdp_ice_analysis.py      # PDP / ICE
 │   ├── 05_comparison.py      #   手法比較
+│   ├── 06_three_houses.py    #   3 軒比較
 │   └── results/              #   生成画像・中間ファイル
 │
 ├── problem2_animals/         # 画像: CIFAR-10 動物分類
@@ -49,8 +75,21 @@ XAI_no_xx/
 │   ├── report.md
 │   └── results/
 │
+├── problem5_mnist/           # 画像: MNIST 手書き数字
+│   ├── 00_train_model.py     #   CNN 学習
+│   ├── 01_gradcam.py         #   Grad-CAM
+│   ├── 02_integrated_gradients.py  # Integrated Gradients
+│   ├── 03_occlusion.py       #   Occlusion Sensitivity
+│   ├── 04_comparison.py      #   手法比較
+│   └── results/
+│
 └── taxonomy/
-    └── xai_taxonomy.md       # XAI 手法の体系的分類
+    ├── xai_taxonomy.md                  # XAI 手法の体系的分類
+    ├── generate_xai_nn_diagram.py       # XAI × NN 構造図 生成スクリプト
+    └── results/
+        ├── xai_nn_architecture.png      # 総合図 (CNN + 決定木)
+        ├── xai_individual_*.png         # 手法別 解説図 (7 枚)
+        └── xai_arch_*.png              # 構造図 (7 枚)
 ```
 
 ## 各 Problem の概要
@@ -61,6 +100,7 @@ XAI_no_xx/
 | P2 | 動物分類 (画像) | CIFAR-10 (torchvision) | ResNet18 | Grad-CAM, IG, Occlusion |
 | P3 | 顔識別 (画像) | LFW (sklearn) | CNN (PyTorch) | Grad-CAM, IG, Occlusion |
 | P4 | 電力系統 | 合成データ | RF, GBT | SHAP, LIME, PI, PDP |
+| P5 | 手書き数字 (画像) | MNIST (torchvision) | CNN (PyTorch) | Grad-CAM, IG, Occlusion |
 
 ### Problem 1: 住宅価格予測
 California Housing データセットを用いた回帰問題。特徴量（収入中央値、築年数、人口など）の重要度を複数の XAI 手法で比較分析。
@@ -74,6 +114,9 @@ LFW データセットで人物識別 CNN を学習。「AI は顔のどこを�
 ### Problem 4: 電力系統
 - **Case 1**: 潮流パターン異常検知 — 「どの母線・パラメータが異常判定の根拠か」
 - **Case 2**: 電圧安定性限界予測 — 「電圧崩壊の主要因は何か」
+
+### Problem 5: MNIST 手書き数字
+手書き数字画像の分類 CNN を学習し、「AI が数字のどの筆跡部分に注目しているか」を Grad-CAM / IG / Occlusion で可視化。
 
 ## セットアップ
 
@@ -112,7 +155,7 @@ open viewer.html
 
 ## viewer.html の機能
 
-- **タブ切替**: Problem 1-4 + Taxonomy + 手法比較表
+- **タブ切替**: Problem 1-5 + Taxonomy + XAI×NN 構造図 + 手法比較表
 - **XAI 手法セレクタ**: 各 Problem で手法をクリックして結果を切替
 - **サンプル切替**: 個別サンプルの説明を切り替えて表示
 - **ライトボックス**: 画像クリックで拡大表示

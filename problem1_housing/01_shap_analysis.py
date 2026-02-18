@@ -14,6 +14,7 @@ import os
 import pickle
 import warnings
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 import shap
 
@@ -112,7 +113,7 @@ def main():
 
     # テストデータのサブセットを使用 (高速化)
     n_samples = min(500, X_test.shape[0])
-    X_subset = X_test[:n_samples]
+    X_subset = pd.DataFrame(X_test[:n_samples], columns=feature_names)
     print(f"[INFO] SHAP 計算に {n_samples} サンプルを使用")
 
     models = {'rf': ('Random Forest', rf), 'gb': ('Gradient Boosting', gb)}
